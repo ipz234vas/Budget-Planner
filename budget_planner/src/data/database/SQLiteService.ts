@@ -16,15 +16,30 @@ export class SQLiteService implements ISQLiteService {
         return this.db;
     }
 
-    public static getInstance():  ISQLiteService {
+    public static async getInstance(): Promise<ISQLiteService> {
         if (!SQLiteService.instance) {
             SQLiteService.instance = new SQLiteService();
-            SQLiteService.instance.init();
+            await SQLiteService.instance.init();
         }
         return SQLiteService.instance;
     }
 
-    private init() {
-        this.db = SQLite.openDatabaseSync(DATABASE_NAME);
+    private async init() {
+        this.db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+
+        await this.db.execAsync(`
+        PRAGMA journal_mode = WAL;
+        PRAGMA foreign_keys = ON;
+    
+        CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            color TEXT,
+            icon TEXT,
+            type TEXT CHECK(type IN ('expense', 'income')),
+            parentId INTEGER,
+            FOREIGN KEY (parentId) REFERENCES categories(id) ON DELETE CASCADE
+        );
+      `);
     }
 }
