@@ -1,0 +1,7 @@
+export interface IRepository<T> {
+    getById(id: number): Promise<T | null>;
+    getAll(): Promise<T[]>;
+    insert(item: T): Promise<void>;
+    update(item: T): Promise<void>;
+    delete(id: number): Promise<void>;
+}
