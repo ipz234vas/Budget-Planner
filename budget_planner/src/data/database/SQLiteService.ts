@@ -16,15 +16,15 @@ export class SQLiteService implements ISQLiteService {
         return this.db;
     }
 
-    public static async getInstance(): Promise<SQLiteService> {
+    public static getInstance():  ISQLiteService {
         if (!SQLiteService.instance) {
             SQLiteService.instance = new SQLiteService();
-            await SQLiteService.instance.init();
+            SQLiteService.instance.init();
         }
         return SQLiteService.instance;
     }
 
-    private async init() {
-        this.db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+    private init() {
+        this.db = SQLite.openDatabaseSync(DATABASE_NAME);
     }
 }
