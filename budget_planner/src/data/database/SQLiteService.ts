@@ -38,6 +38,7 @@ export class SQLiteService implements ISQLiteService {
             icon TEXT,
             type TEXT CHECK(type IN ('expense', 'income')),
             parentId INTEGER,
+            isDeleted INTEGER DEFAULT 0 CHECK (isDeleted IN (0, 1)),
             FOREIGN KEY (parentId) REFERENCES categories(id) ON DELETE CASCADE
         );
       `);

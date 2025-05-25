@@ -1,38 +1,44 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { RepositoryFactory } from "./data/repositories/RepositoryFactory";
 import { SQLiteService } from "./data/database/SQLiteService";
 import { Category } from "./data/models/Category";
 import { CategoryType } from "./domain/enums/CategoryType";
+import { Container } from "./shared/styles/style";
+import { ThemeProvider } from "styled-components";
+import { darkTheme, lightTheme } from "./shared/styles/theme";
+import CategoriesScreen from "./presentation/screens/CategoriesScreen";
+import { FactoryContext } from "./presentation/contexts/FactoryContext";
+
+const category = new Category({
+    name: "test category",
+    type: CategoryType.Expense
+});
 
 export default function App() {
+    const [theme, setTheme] = useState('light');
+    const toggleTheme = async () => {
+        const themeValue = theme === 'dark' ? 'light' : 'dark';
+        setTheme(themeValue);
+    };
+
+    const [factory, setFactory] = useState<RepositoryFactory | null>(null);
     useEffect(() => {
-        const testRepository = async () => {
-            const factory = new RepositoryFactory(await SQLiteService.getInstance())
-            const repository = factory.getRepository(Category)
-            await repository?.insert(new Category({
-                name: "test category",
-                type: CategoryType.Expense,
-            }));
-            const categories = await repository?.getAll();
-            console.log(categories);
+        const initFactory = async () => {
+            const repositoryFactory = new RepositoryFactory(await SQLiteService.getInstance())
+            setFactory(repositoryFactory);
         };
-        testRepository();
+        initFactory();
     }, []);
+
     return (
-        <View style={styles.container}>
-            <Text>Open up App.tsx to start working on your app!</Text>
-            <StatusBar style="auto"/>
-        </View>
+        <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
+            <FactoryContext.Provider value={factory}>
+                <Container>
+                    <CategoriesScreen/>
+                    <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
+                </Container>
+            </FactoryContext.Provider>
+        </ThemeProvider>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});

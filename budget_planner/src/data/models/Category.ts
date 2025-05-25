@@ -8,6 +8,7 @@ export class Category {
     public color?: string;
     public icon?: string;
     public parentId?: number | null = null;
+    public isDeleted: boolean = false;
 
     constructor(params?: CategoryParams) {
         if (params) {
@@ -17,6 +18,7 @@ export class Category {
             this.color = params.color;
             this.icon = params.icon;
             this.parentId = params.parentId ?? null;
+            this.isDeleted = params.isDeleted ?? false;
         }
     }
 }
