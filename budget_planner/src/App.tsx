@@ -2,18 +2,11 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
 import { RepositoryFactory } from "./data/repositories/RepositoryFactory";
 import { SQLiteService } from "./data/database/SQLiteService";
-import { Category } from "./data/models/Category";
-import { CategoryType } from "./domain/enums/CategoryType";
 import { Container } from "./shared/styles/style";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, lightTheme } from "./shared/styles/theme";
-import CategoriesScreen from "./presentation/screens/CategoriesScreen";
 import { FactoryContext } from "./presentation/contexts/FactoryContext";
-
-const category = new Category({
-    name: "test category",
-    type: CategoryType.Expense
-});
+import CategoriesStack from "./presentation/navigation/CategoriesStack";
 
 export default function App() {
     const [theme, setTheme] = useState('light');
@@ -35,7 +28,7 @@ export default function App() {
         <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
             <FactoryContext.Provider value={factory}>
                 <Container>
-                    <CategoriesScreen/>
+                    <CategoriesStack/>
                     <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
                 </Container>
             </FactoryContext.Provider>

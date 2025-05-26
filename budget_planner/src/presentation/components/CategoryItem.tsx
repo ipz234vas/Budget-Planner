@@ -6,22 +6,26 @@ import { Category } from "../../data/models/Category";
 
 interface CategoryItemProps {
     category: Category;
+    onPress?: () => void;
     onDelete?: () => void;
 }
 
-export const CategoryItem: React.FC<CategoryItemProps> = ({ category, onDelete }) => {
+export const CategoryItem: React.FC<CategoryItemProps> = ({ category, onPress, onDelete }) => {
     return (
-        <ItemContainer>
-            <IconWrapper bgColor={category.color ?? "#999"}>
-                <CategoryIcon name={category.icon ?? "tag"} size={24} />
-            </IconWrapper>
-            <CategoryName>{category.name}</CategoryName>
-            <DeleteButton onPress={onDelete}>
-                <MaterialCommunityIcons name="trash-can-outline" size={24} color="#d9534f" />
-            </DeleteButton>
-        </ItemContainer>
+        <TouchableOpacity onPress={onPress}>
+            <ItemContainer>
+                <IconWrapper bgColor={category.color ?? "#999"}>
+                    <CategoryIcon name={category.icon ?? "tag"} size={24} />
+                </IconWrapper>
+                <CategoryName>{category.name}</CategoryName>
+                <DeleteButton onPress={onDelete}>
+                    <MaterialCommunityIcons name="trash-can-outline" size={24} color="#d9534f" />
+                </DeleteButton>
+            </ItemContainer>
+        </TouchableOpacity>
     );
 };
+
 
 const ItemContainer = styled.View`
   flex-direction: row;

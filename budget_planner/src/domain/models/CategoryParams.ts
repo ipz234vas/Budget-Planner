@@ -7,5 +7,4 @@ export interface CategoryParams {
     color?: string;
     icon?: string;
     parentId?: number | null;
-    isDeleted?: boolean;
 }

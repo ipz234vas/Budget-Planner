@@ -1,9 +1,17 @@
 import React, { useContext, useEffect, useState } from "react";
-import { FlatList } from "react-native";
 import { Category } from "../../data/models/Category";
 import { IRepository } from "../../domain/repositories/IRepository";
-import { CategoryItem } from "../components/CategoryItem";
 import { FactoryContext } from "../contexts/FactoryContext";
+import CategoryList from "../components/CategoryList";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from '@react-navigation/stack';
+
+export type RootStackParamList = {
+    Edit: {
+        category: Category | undefined;
+        categories: Category[];
+    };
+};
 
 export default function CategoriesScreen() {
     const factory = useContext(FactoryContext);
@@ -34,13 +42,18 @@ export default function CategoriesScreen() {
         }
     };
 
+    type NavigationProp = StackNavigationProp<RootStackParamList, 'Edit'>;
+
+    const navigation = useNavigation<NavigationProp>();
+
+    const handlePress = async (id: number | undefined) => {
+        navigation.navigate('Edit', {
+            category: categories.find((c) => c.id === id),
+            categories: categories.filter((c) => c.parentId === id),
+        });
+    };
 
     return (
-        <FlatList
-            data={categories}
-            keyExtractor={(item) => item.id?.toString() ?? Math.random().toString()}
-            renderItem={({ item }) => <CategoryItem category={item} onDelete={() => handleDelete(item.id)}/>}
-            contentContainerStyle={{ padding: 0 }}
-        />
+        <CategoryList categories={categories} onDelete={handleDelete} onPress={handlePress}/>
     );
 }
