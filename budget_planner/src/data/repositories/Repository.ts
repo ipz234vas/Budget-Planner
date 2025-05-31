@@ -1,7 +1,7 @@
 import { IRepository } from "../../domain/repositories/IRepository";
 import { ISQLiteService } from "../../domain/database/ISQLiteService";
 
-export class Repository<T extends { id: number | string }> implements IRepository<T> {
+export class Repository<T extends { id?: number | string }> implements IRepository<T> {
     private readonly _sqliteService: ISQLiteService;
     private readonly _tableName: string
 
