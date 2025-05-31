@@ -70,8 +70,6 @@ export default function CategoryEditScreen() {
     const [removedCategories, setRemovedCategories] = useState<Category[]>([]);
     const [updatedCategory, setUpdatedCategory] = useState<Category>(category || new Category());
 
-    console.log(updatedCategory)
-
     const handleEditPress = () => {
         console.log("Відкрити модалку");
     };
