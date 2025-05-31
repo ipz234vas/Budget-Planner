@@ -1,67 +1,52 @@
-import { IRepository } from "../../domain/interfaces/repositories/IRepository";
 import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+
+import { Query } from "../builders/Query";
 
 export class Repository<T extends { id?: number | string }> implements IRepository<T> {
     private readonly _sqliteService: ISQLiteService;
-    private readonly _tableName: string
+    private readonly _tableName: string;
 
     constructor(tableName: string, sqliteService: ISQLiteService) {
         this._sqliteService = sqliteService;
         this._tableName = tableName;
     }
 
-    async getById(id: number): Promise<T | null> {
+    query() {
         const db = this._sqliteService.getDatabase();
-        const row = await db.getFirstAsync<T>(
-            `SELECT * FROM ${this._tableName} WHERE id = ?`,
-            [id]
-        );
-        return row ?? null;
+        const query = new Query(db);
+        return query.table<T>(this._tableName);
+    }
+
+    async getById(id: number | string): Promise<T | null> {
+        const rows = await this.query()
+            .select()
+            .where("id", { operator: "=", value: id })
+            .limit(1)
+            .executeAsync();
+        return rows.length > 0 ? rows[0] : null;
     }
 
     async getAll(): Promise<T[]> {
-        const db = this._sqliteService.getDatabase();
-        return await db.getAllAsync<T>(
-            `SELECT * FROM ${this._tableName}`
-        );
+        return await this.query().select().executeAsync();
     }
 
     async insert(item: T): Promise<void> {
-        const db = this._sqliteService.getDatabase();
-        const keys = Object.keys(item).filter(k => k !== "id");
-        const cols = keys.join(", ");
-        const placeholders = keys.map(_ => "?").join(", ");
-        const values = keys.map(k => (item as any)[k]);
-        await db.runAsync(
-            `INSERT INTO ${this._tableName} (${cols}) VALUES (${placeholders})`,
-            values
-        );
+        const toInsert = { ...item };
+        delete (toInsert as any).id;
+        await this.query().insert(toInsert).executeAsync();
     }
 
     async update(item: Partial<T>): Promise<void> {
-        if (item.id == null) {
+        if (!item.id)
             throw new Error("Cannot update entity without `id` field");
-        }
-
-        const db = this._sqliteService.getDatabase();
-
-        const keys = Object.keys(item).filter(k => k !== "id");
-        const assignments = keys.map(k => `${k} = ?`).join(", ");
-        const values = keys.map(k => (item as any)[k]);
-        values.push(item.id);
-
-        await db.runAsync(
-            `UPDATE ${this._tableName} SET ${assignments} WHERE id = ?`,
-            values
-        );
+        const toUpdate = { ...item };
+        const id = toUpdate.id;
+        delete toUpdate.id;
+        await this.query().update(toUpdate).where("id", { operator: "=", value: id }).executeAsync();
     }
 
-
-    async delete(id: number): Promise<void> {
-        const db = this._sqliteService.getDatabase();
-        await db.runAsync(
-            `DELETE FROM ${this._tableName} WHERE id = ?`,
-            [id]
-        );
+    async delete(id: number | string): Promise<void> {
+        await this.query().delete().where("id", { operator: "=", value: id }).executeAsync();
     }
 }
