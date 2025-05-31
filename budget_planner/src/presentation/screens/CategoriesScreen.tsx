@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Category } from "../../data/models/Category";
-import { IRepository } from "../../domain/repositories/IRepository";
-import { FactoryContext } from "../contexts/FactoryContext";
+import { Category } from "../../domain/models/Category";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+import { FactoryContext } from "../../app/contexts/FactoryContext";
 import CategoryList from "../components/CategoryList";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from '@react-navigation/stack';

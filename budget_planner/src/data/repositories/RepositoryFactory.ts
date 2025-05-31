@@ -1,7 +1,7 @@
 import { Repository } from "./Repository";
-import { ISQLiteService } from "../../domain/database/ISQLiteService";
-import { Category } from "../models/Category";
-import { IRepository } from "../../domain/repositories/IRepository";
+import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
+import { Category } from "../../domain/models/Category";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
 
 export class RepositoryFactory {
     private readonly _sqliteService: ISQLiteService;

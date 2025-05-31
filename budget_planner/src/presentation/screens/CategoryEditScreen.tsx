@@ -5,8 +5,8 @@ import styled from "styled-components/native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { RootStackParamList } from "./CategoriesScreen";
 import CategoryList from "../components/CategoryList";
-import { Category } from "../../data/models/Category";
-import { FactoryContext } from "../contexts/FactoryContext";
+import { Category } from "../../domain/models/Category";
+import { FactoryContext } from "../../app/contexts/FactoryContext";
 
 const Row = styled.View`
     flex-direction: row;

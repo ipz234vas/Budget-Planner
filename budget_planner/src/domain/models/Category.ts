@@ -1,5 +1,5 @@
-import { CategoryType } from "../../domain/enums/CategoryType";
-import { CategoryParams } from "../../domain/models/CategoryParams";
+import { CategoryType } from "../enums/CategoryType";
+import { CategoryParams } from "../interfaces/params/CategoryParams";
 
 export class Category {
     public id?: number;

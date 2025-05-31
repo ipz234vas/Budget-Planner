@@ -1,1 +1,1 @@
-export const DATABASE_NAME = "database";
+export const DATABASE_NAME = "sqlite";

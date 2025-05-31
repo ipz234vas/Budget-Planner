@@ -1,5 +1,5 @@
-import { IRepository } from "../../domain/repositories/IRepository";
-import { ISQLiteService } from "../../domain/database/ISQLiteService";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
 
 export class Repository<T extends { id?: number | string }> implements IRepository<T> {
     private readonly _sqliteService: ISQLiteService;
