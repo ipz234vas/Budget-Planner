@@ -2,7 +2,7 @@ import React from "react";
 import { TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Category } from "../../data/models/Category";
+import { Category } from "../../domain/models/Category";
 
 interface CategoryItemProps {
     category: Category;

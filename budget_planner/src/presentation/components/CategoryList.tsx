@@ -1,4 +1,4 @@
-import { Category } from "../../data/models/Category";
+import { Category } from "../../domain/models/Category";
 import { CategoryItem } from "./CategoryItem";
 import { FlatList } from "react-native";
 import React from "react";

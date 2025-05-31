@@ -1,12 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
-import { RepositoryFactory } from "./data/repositories/RepositoryFactory";
-import { SQLiteService } from "./data/database/SQLiteService";
-import { Container } from "./shared/styles/style";
+import { RepositoryFactory } from "../data/repositories/RepositoryFactory";
+import { SQLiteService } from "../data/sqlite/SQLiteService";
+import { Container } from "./theme/style";
 import { ThemeProvider } from "styled-components";
-import { darkTheme, lightTheme } from "./shared/styles/theme";
-import { FactoryContext } from "./presentation/contexts/FactoryContext";
-import CategoriesStack from "./presentation/navigation/CategoriesStack";
+import { darkTheme, lightTheme } from "./theme/theme";
+import { FactoryContext } from "./contexts/FactoryContext";
+import CategoriesStack from "./navigation/CategoriesStack";
 
 export default function App() {
     const [theme, setTheme] = useState('light');

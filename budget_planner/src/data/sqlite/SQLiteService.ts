@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { ISQLiteService } from "../../domain/database/ISQLiteService";
+import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
 import { DATABASE_NAME } from "../../shared/constants/db";
 
 export class SQLiteService implements ISQLiteService {
