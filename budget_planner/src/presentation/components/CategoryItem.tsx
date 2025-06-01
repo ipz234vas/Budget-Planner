@@ -1,8 +1,11 @@
-import React from "react";
-import { TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { Pressable } from "react-native";
 import styled from "styled-components/native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Category } from "../../domain/models/Category";
+import { dbToIconItem } from "../services/iconParser";
 
 interface CategoryItemProps {
     category: Category;
@@ -11,51 +14,71 @@ interface CategoryItemProps {
 }
 
 export const CategoryItem: React.FC<CategoryItemProps> = ({ category, onPress, onDelete }) => {
+    const [pressed, setPressed] = useState(false);
+
+    const iconItem = dbToIconItem(category.icon);
+
+    let IconComponent: React.ElementType = MaterialIcons;
+    let iconName: any = "category";
+    if (iconItem) {
+        if (iconItem.library === "Ionicons") {
+            IconComponent = Ionicons;
+        } else if (iconItem.library === "FontAwesome") {
+            IconComponent = FontAwesome;
+        } else if (iconItem.library === "MaterialIcons") {
+            IconComponent = MaterialIcons;
+        }
+        iconName = iconItem.name;
+    }
+
     return (
-        <TouchableOpacity onPress={onPress}>
-            <ItemContainer>
-                <IconWrapper bgColor={category.color ?? "#999"}>
-                    <CategoryIcon name={category.icon ?? "tag"} size={24} />
+        <Pressable
+            onPress={onPress}
+            onPressIn={() => setPressed(true)}
+            onPressOut={() => setPressed(false)}
+            style={({ pressed: isPressed }) => [
+                { opacity: isPressed ? 0.95 : 1 },
+            ]}
+        >
+            <ItemContainer $pressed={pressed}>
+                <IconWrapper $bgColor={category.color ?? "#999"}>
+                    <IconComponent name={iconName} size={24} color="white"/>
                 </IconWrapper>
                 <CategoryName>{category.name}</CategoryName>
-                <DeleteButton onPress={onDelete}>
-                    <MaterialCommunityIcons name="trash-can-outline" size={24} color="#d9534f" />
+                <DeleteButton onPress={onDelete} hitSlop={10}>
+                    <MaterialCommunityIcons name="trash-can-outline" size={24} color="#d9534f"/>
                 </DeleteButton>
             </ItemContainer>
-        </TouchableOpacity>
+        </Pressable>
     );
 };
 
-
 const ItemContainer = styled.View`
-  flex-direction: row;
-  align-items: center;
-  padding: 12px 16px;
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  margin-vertical: 6px;
-  elevation: 2;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: ${(props: { $pressed: boolean }) => props.$pressed ? "#ececec" : "#f9f9f9"};
+    border-radius: 16px;
+    margin-vertical: 6px;
+    elevation: ${(props: { $pressed: boolean }) => props.$pressed ? 1 : 2};
+    transform: ${(props: { $pressed: boolean }) => props.$pressed ? "scale(0.98)" : "scale(1)"};
 `;
 
-const IconWrapper = styled.View<{ bgColor: string }>`
-  background-color: ${({ bgColor }: {bgColor: string}) => bgColor};
-  padding: 10px;
-  border-radius: 12px;
-  justify-content: center;
-  align-items: center;
-`;
-
-const CategoryIcon = styled(MaterialCommunityIcons)`
-  color: white;
+const IconWrapper = styled.View`
+    background-color: ${(props: { $bgColor: string }) => props.$bgColor};
+    padding: 10px;
+    border-radius: 12px;
+    justify-content: center;
+    align-items: center;
 `;
 
 const CategoryName = styled.Text`
-  flex: 1;
-  margin-left: 16px;
-  font-size: 16px;
-  color: #333;
+    flex: 1;
+    margin-left: 16px;
+    font-size: 16px;
+    color: #333;
 `;
 
-const DeleteButton = styled(TouchableOpacity)`
-  padding: 4px;
+const DeleteButton = styled.TouchableOpacity`
+    padding: 4px;
 `;
