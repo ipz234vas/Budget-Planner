@@ -28,7 +28,8 @@ export default function CategoriesScreen() {
 
     const updateCategories = async () => {
         const categories = await categoryRepository?.getAll();
-        if (categories) setCategories(categories);
+        if (categories)
+            setCategories(categories);
     };
 
     useEffect(() => {
