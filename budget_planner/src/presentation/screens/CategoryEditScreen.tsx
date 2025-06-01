@@ -7,10 +7,9 @@ import { RootStackParamList } from "./CategoriesScreen";
 import CategoryList from "../components/CategoryList";
 import { Category } from "../../domain/models/Category";
 import { FactoryContext } from "../../app/contexts/FactoryContext";
-import { ColorPickerModal } from "../components/ColorPickerModal";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { IconColorPickerModal } from "../components/IconColorPickerModal";
 import { iconItemToDb, dbToIconItem } from "../services/iconParser";
+import { IconRenderer } from "../components/IconRenderer";
 
 const HeaderContainer = styled.View`
     flex-direction: row;
@@ -106,10 +105,7 @@ export default function CategoryEditScreen() {
 
     const [addedCategories, setAddedCategories] = useState<Category[]>([]);
     const [removedCategories, setRemovedCategories] = useState<Category[]>([]);
-    const [updatedCategory, setUpdatedCategory] = useState<Category>({
-        ...category,
-        icon: category?.icon ?? "mat_category",
-    });
+    const [updatedCategory, setUpdatedCategory] = useState<Category>(category ?? new Category());
     const [showColorModal, setShowColorModal] = useState(false);
 
     const handleEditPress = () => {
@@ -131,13 +127,13 @@ export default function CategoryEditScreen() {
             <HeaderContainer>
                 <HeaderSide>
                     <HeaderButton onPress={handleGoBack}>
-                        <MaterialIcons name="arrow-back-ios-new" size={24} color="#222" />
+                        <MaterialIcons name="arrow-back-ios-new" size={24} color="#222"/>
                     </HeaderButton>
                 </HeaderSide>
                 <HeaderTitle>Редагування</HeaderTitle>
                 <HeaderSide style={{ justifyContent: 'flex-end' }}>
                     <HeaderButton onPress={handleConfirm}>
-                        <MaterialCommunityIcons name="content-save" size={28} color="#28a745" />
+                        <MaterialCommunityIcons name="content-save" size={28} color="#28a745"/>
                     </HeaderButton>
                 </HeaderSide>
             </HeaderContainer>
@@ -155,38 +151,32 @@ export default function CategoryEditScreen() {
                 />
                 <IconWrapper>
                     <ColorCircle color={updatedCategory.color}>
-                        {updatedCategory.icon ? (
-                            (() => {
-                                const iconItem = dbToIconItem(updatedCategory.icon);
-                                if (!iconItem) {
-                                    return <MaterialIcons name="category" size={24} color="white" />;
-                                }
-                                const { library, name } = iconItem;
-                                if (library === "Ionicons") return <Ionicons name={name as any} size={24} color="white" />;
-                                if (library === "FontAwesome") return <FontAwesome name={name as any} size={24} color="white" />;
-                                return <MaterialIcons name={name as any} size={24} color="white" />;
-                            })()
-                        ) : (
-                            <MaterialIcons name={"category"} size={24} color="white" />
-                        )}
+                        <IconRenderer
+                            icon={dbToIconItem(updatedCategory.icon)}
+                            size={24}
+                            color="white"
+                        />
                     </ColorCircle>
                     <TouchableOpacity onPress={handleEditPress}>
-                        <EditIcon name="edit" size={16} color="black" />
+                        <EditIcon name="edit" size={16} color="black"/>
                     </TouchableOpacity>
                 </IconWrapper>
             </Row>
             <SubtitleRow>
                 <SubTitle>Підкатегорії</SubTitle>
-                <TouchableOpacity onPress={() => { /* додати підкатегорію */ }}>
-                    <MaterialCommunityIcons name="plus-circle-outline" size={24} color="#28a745" />
+                <TouchableOpacity onPress={() => {
+                }}>
+                    <MaterialCommunityIcons name="plus-circle-outline" size={24} color="#28a745"/>
                 </TouchableOpacity>
             </SubtitleRow>
             <CategoryList
                 categories={categories}
-                onDelete={() => { }}
-                onPress={() => { }}
+                onDelete={() => {
+                }}
+                onPress={() => {
+                }}
             />
-            <ColorPickerModal
+            <IconColorPickerModal
                 visible={showColorModal}
                 initialColor={updatedCategory.color || "#3399ff"}
                 initialIcon={dbToIconItem(updatedCategory.icon)}

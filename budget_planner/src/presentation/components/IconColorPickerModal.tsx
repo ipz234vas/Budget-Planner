@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Dimensions, View } from "react-native";
+import { Dimensions, Modal } from "react-native";
 import styled from "styled-components/native";
 import { MaterialIcons } from "@expo/vector-icons";
-import ColorPicker from "react-native-wheel-color-picker";
 import { IconPicker } from "./IconPicker";
 import { ICON_CATEGORIES } from "../constants/iconCategories";
 import { IconItem } from "../types/icon";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const WHEEL_SIZE = Math.min(screenWidth - 48, screenHeight * 0.4 - 80);
+import { ColorWheel } from "./ColorWheel";
+import { IconRenderer } from "./IconRenderer";
 
 const ModalContainer = styled.View`
     flex: 1;
@@ -46,21 +42,16 @@ const PreviewBlock = styled.View`
     margin-bottom: 8px;
 `;
 
-const IconPreviewCircle = styled.View<{ bg: string }>`
+const IconPreviewCircle = styled.View`
     width: 68px;
     height: 68px;
     border-radius: 34px;
-    background: ${({ bg }) => bg};
+    background: ${(props: { bg: string }) => props.bg};
     align-items: center;
     justify-content: center;
     border-width: 3px;
     border-color: #e6eaf1;
     margin-bottom: 2px;
-`;
-
-const WheelWrapper = styled.View`
-    align-items: center;
-    margin-bottom: 18px;
 `;
 
 const BottomContent = styled.View`
@@ -69,20 +60,12 @@ const BottomContent = styled.View`
     background: #fff;
 `;
 
-const getIconComponent = (library: IconItem["library"]) => {
-    switch (library) {
-        case "Ionicons":
-            return Ionicons;
-        case "MaterialIcons":
-            return MaterialIcons;
-        case "FontAwesome":
-            return FontAwesome;
-        default:
-            return MaterialIcons;
-    }
-};
+const WheelWrapper = styled.View`
+    align-items: center;
+    margin-bottom: 18px;
+`;
 
-interface ColorPickerModalProps {
+interface IconColorPickerModalProps {
     visible: boolean;
     initialColor?: string;
     initialIcon?: IconItem | undefined;
@@ -90,13 +73,16 @@ interface ColorPickerModalProps {
     onSave: (color: string, icon: IconItem | undefined) => void;
 }
 
-export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
-                                                                      visible,
-                                                                      initialColor = "#3399ff",
-                                                                      initialIcon,
-                                                                      onClose,
-                                                                      onSave,
-                                                                  }) => {
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const WHEEL_SIZE = Math.min(screenWidth - 48, screenHeight * 0.4 - 80);
+
+export const IconColorPickerModal: React.FC<IconColorPickerModalProps> = ({
+                                                                              visible,
+                                                                              initialColor = "#3399ff",
+                                                                              initialIcon,
+                                                                              onClose,
+                                                                              onSave,
+                                                                          }) => {
     const [previewColor, setPreviewColor] = useState(initialColor);
     const [selectedIcon, setSelectedIcon] = useState<IconItem | undefined>(initialIcon);
 
@@ -110,46 +96,31 @@ export const ColorPickerModal: React.FC<ColorPickerModalProps> = ({
         onClose();
     };
 
-    const renderIconPreview = () => {
-        if (!selectedIcon) {
-            return (
-                <IconPreviewCircle bg="#f3f5f9">
-                    <MaterialIcons name="help-outline" size={36} color="#bbb" />
-                </IconPreviewCircle>
-            );
-        }
-        const IconComp = getIconComponent(selectedIcon.library);
-        return (
-            <IconPreviewCircle bg={previewColor}>
-                <IconComp name={selectedIcon.name as any} size={36} color="#fff" />
-            </IconPreviewCircle>
-        );
-    };
-
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
             <ModalContainer>
                 <Header>
                     <IconBtn onPress={onClose}>
-                        <MaterialIcons name="close" size={28} color="#222" />
+                        <MaterialIcons name="close" size={28} color="#222"/>
                     </IconBtn>
                     <Title>Оберіть колір</Title>
                     <IconBtn onPress={handleConfirm}>
-                        <MaterialIcons name="check" size={28} color="#222" />
+                        <MaterialIcons name="check" size={28} color="#222"/>
                     </IconBtn>
                 </Header>
 
-                <PreviewBlock>{renderIconPreview()}</PreviewBlock>
+                <PreviewBlock>
+                    <IconPreviewCircle bg={previewColor}>
+                        <IconRenderer
+                            icon={selectedIcon}
+                            size={36}
+                            color="#fff"
+                        />
+                    </IconPreviewCircle>
+                </PreviewBlock>
 
                 <WheelWrapper>
-                    <View style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}>
-                        <ColorPicker
-                            color={previewColor}
-                            onColorChange={setPreviewColor}
-                            sliderHidden
-                            thumbSize={20}
-                        />
-                    </View>
+                    <ColorWheel color={previewColor} onColorChange={setPreviewColor} size={WHEEL_SIZE}/>
                 </WheelWrapper>
 
                 <BottomContent>

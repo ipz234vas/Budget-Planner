@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Pressable } from "react-native";
 import styled from "styled-components/native";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Category } from "../../domain/models/Category";
 import { dbToIconItem } from "../services/iconParser";
+import { IconRenderer } from "./IconRenderer";
 
 interface CategoryItemProps {
     category: Category;
@@ -15,21 +14,6 @@ interface CategoryItemProps {
 
 export const CategoryItem: React.FC<CategoryItemProps> = ({ category, onPress, onDelete }) => {
     const [pressed, setPressed] = useState(false);
-
-    const iconItem = dbToIconItem(category.icon);
-
-    let IconComponent: React.ElementType = MaterialIcons;
-    let iconName: any = "category";
-    if (iconItem) {
-        if (iconItem.library === "Ionicons") {
-            IconComponent = Ionicons;
-        } else if (iconItem.library === "FontAwesome") {
-            IconComponent = FontAwesome;
-        } else if (iconItem.library === "MaterialIcons") {
-            IconComponent = MaterialIcons;
-        }
-        iconName = iconItem.name;
-    }
 
     return (
         <Pressable
@@ -42,7 +26,11 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({ category, onPress, o
         >
             <ItemContainer $pressed={pressed}>
                 <IconWrapper $bgColor={category.color ?? "#999"}>
-                    <IconComponent name={iconName} size={24} color="white"/>
+                    <IconRenderer
+                        icon={dbToIconItem(category.icon)}
+                        size={24}
+                        color="white"
+                    />
                 </IconWrapper>
                 <CategoryName>{category.name}</CategoryName>
                 <DeleteButton onPress={onDelete} hitSlop={10}>
@@ -52,6 +40,7 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({ category, onPress, o
         </Pressable>
     );
 };
+
 
 const ItemContainer = styled.View`
     flex-direction: row;
