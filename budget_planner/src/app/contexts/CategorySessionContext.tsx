@@ -1,25 +1,33 @@
-// contexts/CategorySessionProvider.tsx
-
 import React, { createContext, useContext, useMemo } from "react";
-import { CategoryEditSession } from "../sessions/CategoryEditSession";
+import { CategoryHierarchyTree } from "../../domain/tree/CategoryHierarchyTree";
+import { CommandManager } from "../../domain/commands/CommandManager";
 
-const SessionContext = createContext<CategoryEditSession | null>(null);
+interface CategorySession {
+    hierarchyTree: CategoryHierarchyTree;
+    commandManager: CommandManager;
+    removedIds: Set<number>;
+}
 
-export const CategorySessionProvider: React.FC<{
-    children: React.ReactNode;
-}> = ({ children }) => {
-    const session = useMemo(
-        () =>
-            new CategoryEditSession(),
-        []
-    );
+const SessionContext = createContext<CategorySession | null>(null);
+
+export const CategorySessionProvider: React.FC<{ children: React.ReactNode }> = ({
+                                                                                     children,
+                                                                                 }) => {
+    const session = useMemo<CategorySession>(() => {
+        return {
+            hierarchyTree: new CategoryHierarchyTree(),
+            commandManager: new CommandManager(),
+            removedIds: new Set<number>(),
+        };
+    }, []);
 
     return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 };
 
-export const useCategorySession = () => {
+export function useCategorySession(): CategorySession {
     const session = useContext(SessionContext);
-    if (!session)
-        throw new Error("useCategorySession must be used within the SessionContext");
+    if (session === null) {
+        throw new Error("useCategorySession must be used within CategorySessionProvider.");
+    }
     return session;
-};
+}

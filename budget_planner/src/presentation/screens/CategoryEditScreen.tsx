@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, TouchableOpacity, View, Text } from "react-native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import styled from "styled-components/native";
-import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { CategoriesStackParamList } from "./CategoriesScreen";
 import CategoryList from "../components/CategoryList";
 import { Category } from "../../domain/models/Category";
@@ -12,9 +12,13 @@ import { iconItemToDb, dbToIconItem } from "../services/iconParser";
 import { IconRenderer } from "../components/IconRenderer";
 import { useCategorySession } from "../../app/contexts/CategorySessionContext";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { CategoryViewService } from "../../app/sessions/CategoryViewService";
-import { CategoryPersistenceService } from "../../app/sessions/CategoryPersistenceService";
 import { SQLiteService } from "../../data/sqlite/SQLiteService";
+import { CategoryUnitOfWork } from "../../app/CategoryUnitOfWork";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+import { CategoryViewService } from "../../app/CategoryViewService";
+import { UpdateCategoryCommand } from "../../domain/commands/UpdateCategoryCommand";
+import { AddCategoryCommand } from "../../domain/commands/AddCategoryCommand";
+import { RemoveCategoryCommand } from "../../domain/commands/RemoveCategoryCommand";
 
 const HeaderContainer = styled.View`
     flex-direction: row;
@@ -98,80 +102,151 @@ const SubTitle = styled.Text`
     font-weight: 600;
 `;
 
+type EditorRoute = RouteProp<CategoriesStackParamList, "CategoryEditor">;
+type EditorNav = StackNavigationProp<CategoriesStackParamList, "CategoryEditor">;
+
 export default function CategoryEditScreen() {
-    type EditorRouteProp = RouteProp<CategoriesStackParamList, "CategoryEditor">;
-    type EditorNavProp = StackNavigationProp<CategoriesStackParamList, "CategoryEditor">;
 
-    const route = useRoute<EditorRouteProp>();
-    const navigation = useNavigation<EditorNavProp>();
+    const { hierarchyTree, commandManager, removedIds } = useCategorySession();
+    const scopeRef = useRef(commandManager.openScope());
 
-    const id = route.params?.id ?? null;
-    const session = useCategorySession();
-    const factory = React.useContext(FactoryContext);
-    const repo = factory?.getRepository(Category);
-    const viewService = new CategoryViewService(session, repo!);
+    const factoryCtx = React.useContext(FactoryContext);
+    const repo = factoryCtx?.getRepository(Category) as IRepository<Category> | undefined;
+    if (!repo) {
+        return <View><Text>Repo not ready</Text></View>;
+    }
 
-    const [node, setNode] = useState<any>(null);
+    const viewService = React.useMemo(
+        () => new CategoryViewService(hierarchyTree, removedIds, repo),
+        [hierarchyTree, removedIds, repo],
+    );
+
+    const route = useRoute<EditorRoute>();
+    const navigation = useNavigation<EditorNav>();
+    let categoryId = route.params.id;
+    const parentId = route.params.parentId;
+    const type = route.params.type;
+
+    const [node, setNode] = useState<Category | null>(null);
     const [children, setChildren] = useState<Category[]>([]);
-    const [draft, setDraft] = useState<any>(null);
-    const [showColorModal, setShowColorModal] = useState(false);
+    const [draft, setDraft] = useState<Partial<Category>>({});
+    const [showPicker, setShowPicker] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let active = true;
-        setLoading(true);
+        let cancelled = false;
+
         (async () => {
-            const node = await viewService.getById(id);
-            if (!active) return;
+            let node: Category | null = null;
+
+            if (categoryId) {
+                node = await viewService.getById(categoryId);
+            }
+            if (cancelled) {
+                return;
+            }
+
+            categoryId = categoryId ?? hierarchyTree.reserveTemporaryId();
+            if (!node) {
+                commandManager.run(
+                    new AddCategoryCommand(hierarchyTree, parentId ?? null, { id: categoryId, type: type })
+                );
+                node = hierarchyTree.getNodeById(categoryId);
+            } else if (node && !hierarchyTree.getNodeById(categoryId)) {
+                commandManager.run(
+                    new AddCategoryCommand(hierarchyTree, parentId ?? null, node)
+                );
+                node = hierarchyTree.getNodeById(categoryId);
+            }
             setNode(node);
             setDraft({ ...node });
-            const arr = await viewService.getChildren(id);
-            if (!active) return;
-            setChildren(arr);
             setLoading(false);
+
+            const children = await viewService.getChildren(categoryId);
+            if (cancelled) {
+                return;
+            }
+            setChildren(children);
         })();
+
         return () => {
-            active = false;
+            cancelled = true;
         };
     }, []);
 
-    if (loading || !node) return <View><Text>Завантаження...</Text></View>;
+    useFocusEffect(
+        useCallback(() => {
+            let active = true;
 
-    const saveLocal = () => {
-        session.update(node.id, draft);
-        setNode({ ...draft });
+            (async () => {
+                if (!categoryId) {
+                    return;
+                }
+                const items = await viewService.getChildren(categoryId);
+                if (!active) {
+                    return;
+                }
+                setChildren(items);
+            })();
+
+            return () => {
+                active = false;
+            };
+
+        }, [hierarchyTree, categoryId]),
+    );
+
+    if (loading || node === null) {
+        return <View><Text>Loading…</Text></View>;
+    }
+
+    const saveLocal = async () => {
+        commandManager.run(new UpdateCategoryCommand(hierarchyTree, node.id!, draft));
+        setNode({ ...(await viewService.getById(node.id!) as Category) });
     };
 
-    const addChild = () => {
-        const child = session.addChild(node.id, { name: "" });
-        setChildren(prev => [...prev, child]);
-        navigation.push("CategoryEditor", { id: child.id });
+    const handleAddChild = () => {
+        navigation.push("CategoryEditor", {
+            id: hierarchyTree.reserveTemporaryId(),
+            parentId: draft.id || null,
+            type: type
+        });
     };
 
-    const handleDelete = (childId?: number) => {
-        if (!childId) return;
-        session.remove(childId);
-        setChildren(prev => prev.filter(c => c.id !== childId));
+    const handleDeleteChild = async (childId?: number) => {
+        if (childId === undefined) {
+            return;
+        }
+        commandManager.run(new RemoveCategoryCommand(hierarchyTree, childId, removedIds));
+        setChildren(await viewService.getChildren(node.id!));
     };
 
-    const openChild = (childId?: number) => {
-        const child = children.find((c) => c.id === childId);
-        session.addChild(child?.parentId || null, { ...child });
-        navigation.push("CategoryEditor", { id: childId });
+    const handleOpenChild = async (childId?: number) => {
+        if (childId == undefined) {
+            return;
+        }
+        navigation.push("CategoryEditor", { id: childId, parentId: draft.id || null, type: type });
     };
 
-    const commitRoot = async () => {
+    const cancelAndBack = (): void => {
+        commandManager.cancelScope(scopeRef.current);
+        navigation.goBack();
+    };
+
+    const rootCommitAndBack = async (): Promise<void> => {
         try {
             saveLocal();
-            const service = new CategoryPersistenceService(session, repo!, await SQLiteService.getInstance());
-            await service.commit();
+            const uow = new CategoryUnitOfWork(repo, await SQLiteService.getInstance());
+            await uow.commit(hierarchyTree, Array.from(removedIds));
+            commandManager.clear();
+            removedIds.clear();
             navigation.goBack();
         } catch (e) {
             Alert.alert("Помилка збереження", String(e));
         }
     };
 
-    const goBack = () => {
+    const saveAndBack = (): void => {
         saveLocal();
         navigation.goBack();
     };
@@ -180,8 +255,8 @@ export default function CategoryEditScreen() {
         <>
             <HeaderContainer>
                 <HeaderSide>
-                    <HeaderButton onPress={goBack}>
-                        <MaterialIcons name="arrow-back-ios-new" size={24} color="#222" />
+                    <HeaderButton onPress={cancelAndBack}>
+                        <MaterialIcons name="arrow-back-ios-new" size={24} color="#222"/>
                     </HeaderButton>
                 </HeaderSide>
                 <HeaderTitle>
@@ -189,12 +264,12 @@ export default function CategoryEditScreen() {
                 </HeaderTitle>
                 <HeaderSide style={{ justifyContent: "flex-end" }}>
                     {!node.parentId ? (
-                        <HeaderButton onPress={commitRoot}>
-                            <MaterialCommunityIcons name="content-save" size={28} color="#28a745" />
+                        <HeaderButton onPress={rootCommitAndBack}>
+                            <MaterialCommunityIcons name="content-save" size={28} color="#28a745"/>
                         </HeaderButton>
                     ) : (
-                        <HeaderButton onPress={goBack}>
-                            <MaterialCommunityIcons name="check" size={28} color="#28a745" />
+                        <HeaderButton onPress={saveAndBack}>
+                            <MaterialCommunityIcons name="check" size={28} color="#28a745"/>
                         </HeaderButton>
                     )}
                 </HeaderSide>
@@ -216,30 +291,30 @@ export default function CategoryEditScreen() {
                             color="white"
                         />
                     </ColorCircle>
-                    <TouchableOpacity onPress={() => setShowColorModal(true)}>
-                        <EditIcon name="edit" size={16} color="black" />
+                    <TouchableOpacity onPress={() => setShowPicker(true)}>
+                        <EditIcon name="edit" size={16} color="black"/>
                     </TouchableOpacity>
                 </IconWrapper>
             </Row>
 
             <SubtitleRow>
                 <SubTitle>Підкатегорії</SubTitle>
-                <TouchableOpacity onPress={addChild}>
-                    <MaterialCommunityIcons name="plus-circle-outline" size={24} color="#28a745" />
+                <TouchableOpacity onPress={handleAddChild}>
+                    <MaterialCommunityIcons name="plus-circle-outline" size={24} color="#28a745"/>
                 </TouchableOpacity>
             </SubtitleRow>
 
             <CategoryList
                 categories={children}
-                onDelete={handleDelete}
-                onPress={openChild}
+                onDelete={handleDeleteChild}
+                onPress={handleOpenChild}
             />
 
             <IconColorPickerModal
-                visible={showColorModal}
+                visible={showPicker}
                 initialColor={draft.color || "#3399ff"}
                 initialIcon={dbToIconItem(draft.icon)}
-                onClose={() => setShowColorModal(false)}
+                onClose={() => setShowPicker(false)}
                 onSave={(color, icon) => {
                     setDraft((prev: any) => ({
                         ...prev,

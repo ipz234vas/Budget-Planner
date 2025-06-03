@@ -9,10 +9,9 @@ import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { CategoriesTabsParamList } from "../types/CategoriesTabsParamList";
 import { CategoryType } from "../../domain/enums/CategoryType";
-import { useCategorySession } from "../../app/contexts/CategorySessionContext";
 
 export type CategoriesStackParamList = {
-    CategoryEditor: { id: number | undefined, type: CategoryType, parentId: number | null };
+    CategoryEditor: { id?: number | undefined, parentId: number | null, type: CategoryType };
 };
 
 type CategoriesScreenRoute = RouteProp<CategoriesTabsParamList, "Income" | "Expenses">;
@@ -20,11 +19,9 @@ type CategoriesScreenRoute = RouteProp<CategoriesTabsParamList, "Income" | "Expe
 export default function CategoriesScreen() {
     const { type } = useRoute<CategoriesScreenRoute>().params
     const factory = useContext(FactoryContext);
-
-    const session = useCategorySession();
-
     const [categories, setCategories] = useState<Category[]>([]);
-    const [categoryRepository, setCategoryRepository] = useState<IRepository<Category> | null>(null);
+    const [categoryRepository,
+        setCategoryRepository] = useState<IRepository<Category> | null>(null);
 
     useEffect(() => {
         if (factory) {
@@ -34,7 +31,6 @@ export default function CategoriesScreen() {
     }, [factory]);
 
     const updateCategories = async () => {
-        //const categories = await categoryRepository?.getAll();
         const categories =
             await categoryRepository?.query()
                 .select()
@@ -63,13 +59,12 @@ export default function CategoriesScreen() {
     const navigation = useNavigation<NavigationProp>();
 
     const handlePress = (id?: number) => {
-        session.addChild(null, { ...categories.find((c) => c.id === id) });
-        navigation.navigate('CategoryEditor', { id: id, type: type, parentId: null });
+        navigation.navigate('CategoryEditor', { id: id, parentId: null, type: type });
     };
 
     const handleAddRoot = () => {
-        const child = session.addChild(null, { type: type });
-        navigation.navigate('CategoryEditor', { id: child.id, type: type, parentId: null });
+
+        navigation.navigate("CategoryEditor", { parentId: null, type: type });
     };
 
     return (
