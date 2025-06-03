@@ -7,6 +7,8 @@ import { ThemeProvider } from "styled-components";
 import { darkTheme, lightTheme } from "./theme/theme";
 import { FactoryContext } from "./contexts/FactoryContext";
 import CategoriesStack from "./navigation/CategoriesStack";
+import { CategorySessionProvider } from "./contexts/CategorySessionContext";
+import { ISQLiteService } from "../domain/interfaces/sqlite/ISQLiteService";
 
 export default function App() {
     const [theme, setTheme] = useState('light');
@@ -28,7 +30,9 @@ export default function App() {
         <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
             <FactoryContext.Provider value={factory}>
                 <Container>
-                    <CategoriesStack/>
+                    <CategorySessionProvider>
+                        <CategoriesStack/>
+                    </CategorySessionProvider>)
                     <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
                 </Container>
             </FactoryContext.Provider>

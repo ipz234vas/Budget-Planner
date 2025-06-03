@@ -5,7 +5,7 @@ export interface IRepository<T> {
 
     getAll(): Promise<T[]>;
 
-    insert(item: T): Promise<void>;
+    insert(item: T): Promise<number>;
 
     update(item: Partial<T>): Promise<void>;
 

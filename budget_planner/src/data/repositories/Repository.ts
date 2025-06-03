@@ -31,10 +31,10 @@ export class Repository<T extends { id?: number | string }> implements IReposito
         return await this.query().select().executeAsync();
     }
 
-    async insert(item: T): Promise<void> {
+    async insert(item: T): Promise<number> {
         const toInsert = { ...item };
         delete (toInsert as any).id;
-        await this.query().insert(toInsert).executeAsync();
+        return await this.query().insert(toInsert).executeAsync();
     }
 
     async update(item: Partial<T>): Promise<void> {

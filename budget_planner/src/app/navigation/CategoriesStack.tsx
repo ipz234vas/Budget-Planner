@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import CategoryEditScreen from "../../presentation/screens/CategoryEditScreen";
 import { NavigationContainer } from "@react-navigation/native";
-import CategoriesScreen from "../../presentation/screens/CategoriesScreen";
+import TopTabsNavigator from "./CategoriesTopNavigation";
 
 
 export default function CategoriesStack() {
@@ -18,8 +18,8 @@ export default function CategoriesStack() {
                     headerShown: false
                 }}
             >
-                <Stack.Screen name="Categories" component={CategoriesScreen}/>
-                <Stack.Screen name="Edit" component={CategoryEditScreen}/>
+                <Stack.Screen name="Categories" component={TopTabsNavigator}/>
+                <Stack.Screen name="CategoryEditor" component={CategoryEditScreen}/>
             </Stack.Navigator>
         </NavigationContainer>
     );
