@@ -7,7 +7,7 @@ import { ThemeProvider } from "styled-components";
 import { darkTheme, lightTheme } from "./theme/theme";
 import { FactoryContext } from "./contexts/FactoryContext";
 import CategoriesStack from "./navigation/CategoriesStack";
-import { CategorySessionProvider } from "./contexts/CategorySessionContext";
+import { CategorySessionProvider } from "../presentation/contexts/CategorySessionContext";
 
 export default function App() {
     const [theme, setTheme] = useState('light');

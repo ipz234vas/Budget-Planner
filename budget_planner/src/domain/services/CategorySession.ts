@@ -1,5 +1,5 @@
-import { CategoryHierarchyTree } from "../../domain/tree/CategoryHierarchyTree";
-import { CommandManager } from "../../domain/commands/CommandManager";
+import { CategoryHierarchyTree } from "../tree/CategoryHierarchyTree";
+import { CommandManager } from "../commands/CommandManager";
 
 export class CategorySession {
     public hierarchyTree: CategoryHierarchyTree;

@@ -1,6 +1,6 @@
-import { IRepository } from "../domain/interfaces/repositories/IRepository";
-import { Category } from "../domain/models/Category";
-import { CategoryHierarchyTree } from "../domain/tree/CategoryHierarchyTree";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+import { Category } from "../../domain/models/Category";
+import { CategoryHierarchyTree } from "../../domain/tree/CategoryHierarchyTree";
 
 export class CategoryViewService {
 

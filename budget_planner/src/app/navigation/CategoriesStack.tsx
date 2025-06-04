@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import CategoryEditScreen from "../../presentation/screens/CategoryEditScreen";
 import { NavigationContainer } from "@react-navigation/native";
-import TopTabsNavigator from "./CategoriesTopNavigation";
+import TopTabsNavigator from "./CategoriesTabs";
 
 
 export default function CategoriesStack() {

@@ -1,10 +1,10 @@
-import { IRepository } from "../domain/interfaces/repositories/IRepository";
-import { Category } from "../domain/models/Category";
-import { CategoryHierarchyTree } from "../domain/tree/CategoryHierarchyTree";
-import { ISQLiteService } from "../domain/interfaces/sqlite/ISQLiteService";
-import { PatchCategoryNode } from "../domain/interfaces/tree/PatchCategoryNode";
+import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+import { Category } from "../../domain/models/Category";
+import { CategoryHierarchyTree } from "../../domain/tree/CategoryHierarchyTree";
+import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
+import { PatchCategoryNode } from "../../domain/interfaces/tree/PatchCategoryNode";
 
-export class CategoryUnitOfWork {
+export class CategoryPersistenceService {
 
     private readonly categoryRepository: IRepository<Category>;
 

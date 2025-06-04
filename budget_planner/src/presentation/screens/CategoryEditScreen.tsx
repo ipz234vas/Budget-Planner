@@ -8,14 +8,14 @@ import CategoryList from "../components/CategoryList";
 import { Category } from "../../domain/models/Category";
 import { FactoryContext } from "../../app/contexts/FactoryContext";
 import { IconColorPickerModal } from "../components/IconColorPickerModal";
-import { iconItemToDb, dbToIconItem } from "../services/iconParser";
+import { iconItemToDb, dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "../components/IconRenderer";
-import { useCategorySession } from "../../app/contexts/CategorySessionContext";
+import { useCategorySession } from "../contexts/CategorySessionContext";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { SQLiteService } from "../../data/sqlite/SQLiteService";
-import { CategoryUnitOfWork } from "../../app/CategoryUnitOfWork";
+import { CategoryPersistenceService } from "../../data/services/CategoryPersistenceService";
 import { IRepository } from "../../domain/interfaces/repositories/IRepository";
-import { CategoryViewService } from "../../app/CategoryViewService";
+import { CategoryViewService } from "../services/CategoryViewService";
 import { UpdateCategoryCommand } from "../../domain/commands/UpdateCategoryCommand";
 import { AddCategoryCommand } from "../../domain/commands/AddCategoryCommand";
 import { RemoveCategoryCommand } from "../../domain/commands/RemoveCategoryCommand";
@@ -251,8 +251,8 @@ export default function CategoryEditScreen() {
         try {
             setHasUnsavedChanges(false);
             await saveLocal();
-            const uow = new CategoryUnitOfWork(repo, await SQLiteService.getInstance());
-            await uow.commit(hierarchyTree, Array.from(removedIds));
+            const persistenceService = new CategoryPersistenceService(repo, await SQLiteService.getInstance());
+            await persistenceService.commit(hierarchyTree, Array.from(removedIds));
 
             navigation.goBack();
         } catch (e) {
