@@ -33,7 +33,6 @@ export class CategoryHierarchyTree {
         }
 
         this.indexById.set(id, newNode);
-
         return newNode;
     }
 
@@ -55,7 +54,6 @@ export class CategoryHierarchyTree {
 
         return nodeToDetach;
     }
-
 
     public attachNode(parentId: number | null, node: PatchCategoryNode): void {
         node.parentId = parentId;
@@ -101,5 +99,11 @@ export class CategoryHierarchyTree {
 
     public reserveTemporaryId(): number {
         return this.nextTemporaryId--;
+    }
+
+    public clear(): void {
+        this.rootNodes.length = 0;
+        this.indexById.clear();
+        this.nextTemporaryId = -1;
     }
 }

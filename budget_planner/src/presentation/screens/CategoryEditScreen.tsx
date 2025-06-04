@@ -107,7 +107,8 @@ type EditorNav = StackNavigationProp<CategoriesStackParamList, "CategoryEditor">
 
 export default function CategoryEditScreen() {
 
-    const { hierarchyTree, commandManager, removedIds } = useCategorySession();
+    const session = useCategorySession();
+    const { hierarchyTree, commandManager, removedIds } = session;
     const scopeRef = useRef(commandManager.openScope());
 
     const factoryCtx = React.useContext(FactoryContext);
@@ -132,6 +133,20 @@ export default function CategoryEditScreen() {
     const [draft, setDraft] = useState<Partial<Category>>({});
     const [showPicker, setShowPicker] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+            if (hasUnsavedChanges) {
+                commandManager.cancelScope(scopeRef.current);
+            }
+
+            if (parentId == null) {
+                session.clear();
+            }
+        })
+        return unsubscribe;
+    }, [hasUnsavedChanges]);
 
     useEffect(() => {
         let cancelled = false;
@@ -229,25 +244,25 @@ export default function CategoryEditScreen() {
     };
 
     const cancelAndBack = (): void => {
-        commandManager.cancelScope(scopeRef.current);
         navigation.goBack();
     };
 
     const rootCommitAndBack = async (): Promise<void> => {
         try {
-            saveLocal();
+            setHasUnsavedChanges(false);
+            await saveLocal();
             const uow = new CategoryUnitOfWork(repo, await SQLiteService.getInstance());
             await uow.commit(hierarchyTree, Array.from(removedIds));
-            commandManager.clear();
-            removedIds.clear();
+
             navigation.goBack();
         } catch (e) {
             Alert.alert("Помилка збереження", String(e));
         }
     };
 
-    const saveAndBack = (): void => {
-        saveLocal();
+    const saveAndBack = async () => {
+        setHasUnsavedChanges(false);
+        await saveLocal();
         navigation.goBack();
     };
 

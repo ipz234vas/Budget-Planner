@@ -1,26 +1,11 @@
 import React, { createContext, useContext, useMemo } from "react";
-import { CategoryHierarchyTree } from "../../domain/tree/CategoryHierarchyTree";
-import { CommandManager } from "../../domain/commands/CommandManager";
-
-interface CategorySession {
-    hierarchyTree: CategoryHierarchyTree;
-    commandManager: CommandManager;
-    removedIds: Set<number>;
-}
+import { CategorySession } from "./CategorySession";
 
 const SessionContext = createContext<CategorySession | null>(null);
 
-export const CategorySessionProvider: React.FC<{ children: React.ReactNode }> = ({
-                                                                                     children,
-                                                                                 }) => {
-    const session = useMemo<CategorySession>(() => {
-        return {
-            hierarchyTree: new CategoryHierarchyTree(),
-            commandManager: new CommandManager(),
-            removedIds: new Set<number>(),
-        };
-    }, []);
 
+export const CategorySessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const session = useMemo(() => new CategorySession(), []);
     return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 };
 
