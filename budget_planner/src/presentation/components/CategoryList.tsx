@@ -16,6 +16,7 @@ export default function CategoryList({
 
     return (
         <FlatList
+            style={{padding: 10}}
             data={categories}
             keyExtractor={(item) =>
                 (item.id ?? Math.random()).toString()
