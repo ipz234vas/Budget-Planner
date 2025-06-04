@@ -3,7 +3,6 @@ import { Alert, TouchableOpacity, View, Text } from "react-native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import styled from "styled-components/native";
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
-import { CategoriesStackParamList } from "./CategoriesScreen";
 import CategoryList from "../components/CategoryList";
 import { Category } from "../../domain/models/Category";
 import { FactoryContext } from "../../app/contexts/FactoryContext";
@@ -19,6 +18,7 @@ import { CategoryViewService } from "../services/CategoryViewService";
 import { UpdateCategoryCommand } from "../../domain/commands/UpdateCategoryCommand";
 import { AddCategoryCommand } from "../../domain/commands/AddCategoryCommand";
 import { RemoveCategoryCommand } from "../../domain/commands/RemoveCategoryCommand";
+import { CategoriesStackParamList } from "../types/CategoriesStackParamList";
 
 const HeaderContainer = styled.View`
     flex-direction: row;
