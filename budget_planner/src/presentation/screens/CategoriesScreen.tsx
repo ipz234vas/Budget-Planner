@@ -1,59 +1,56 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Category } from "../../domain/models/Category";
-import { IRepository } from "../../domain/interfaces/repositories/IRepository";
-import { FactoryContext } from "../../app/contexts/FactoryContext";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CategoryList from "../components/CategoryList";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from '@react-navigation/stack';
+import { CategoriesTabsParamList } from "../types/CategoriesTabsParamList";
+import { useCategories } from "../hooks/categories/useCategories";
+import { CategoriesStackParamList } from "../types/CategoriesStackParamList";
 
-export type RootStackParamList = {
-    Edit: {
-        category: Category | undefined;
-        categories: Category[];
-    };
-};
+type CategoriesScreenRoute = RouteProp<CategoriesTabsParamList, "Income" | "Expenses">;
 
 export default function CategoriesScreen() {
-    const factory = useContext(FactoryContext);
+    const { type } = useRoute<CategoriesScreenRoute>().params;
+    const { categories, deleteCategory } = useCategories(type);
 
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [categoryRepository, setCategoryRepository] = useState<IRepository<Category> | null>(null);
+    const navigation = useNavigation<StackNavigationProp<CategoriesStackParamList, 'CategoryEditor'>>();
 
-    useEffect(() => {
-        if (factory) {
-            const repo = factory.getRepository(Category);
-            setCategoryRepository(repo);
-        }
-    }, [factory]);
-
-    const updateCategories = async () => {
-        const categories = await categoryRepository?.getAll();
-        if (categories) setCategories(categories);
+    const handlePress = (id?: number) => {
+        navigation.navigate('CategoryEditor', { id: id, parentId: null, type: type });
     };
-
-    useEffect(() => {
-        updateCategories();
-    }, [categoryRepository]);
-
-    const handleDelete = async (id: number | undefined) => {
-        if (id) {
-            await categoryRepository?.delete(id);
-            await updateCategories();
-        }
-    };
-
-    type NavigationProp = StackNavigationProp<RootStackParamList, 'Edit'>;
-
-    const navigation = useNavigation<NavigationProp>();
-
-    const handlePress = async (id: number | undefined) => {
-        navigation.navigate('Edit', {
-            category: categories.find((c) => c.id === id),
-            categories: categories.filter((c) => c.parentId === id),
-        });
+    const handleAddRoot = () => {
+        navigation.navigate("CategoryEditor", { parentId: null, type: type });
     };
 
     return (
-        <CategoryList categories={categories} onDelete={handleDelete} onPress={handlePress}/>
+        <View style={{ flex: 1 }}>
+            <CategoryList
+                categories={categories}
+                onDelete={deleteCategory}
+                onPress={handlePress}
+            />
+            <TouchableOpacity style={styles.fab} onPress={handleAddRoot}>
+                <MaterialCommunityIcons name="plus" size={32} color="#fff"/>
+            </TouchableOpacity>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    fab: {
+        position: "absolute",
+        right: 24,
+        bottom: 36,
+        backgroundColor: "#2854a7",
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        justifyContent: "center",
+        alignItems: "center",
+        elevation: 6,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+    },
+});
