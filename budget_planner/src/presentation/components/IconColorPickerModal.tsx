@@ -1,69 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Dimensions, Modal } from "react-native";
-import styled from "styled-components/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { IconPicker } from "./IconPicker";
 import { ICON_CATEGORIES } from "../constants/iconCategories";
 import { IconItem } from "../types/icon";
 import { ColorWheel } from "./ColorWheel";
 import { IconRenderer } from "./IconRenderer";
-
-const ModalContainer = styled.View`
-    flex: 1;
-    background: #fff;
-`;
-
-const Header = styled.View`
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 18px;
-    height: 56px;
-    border-bottom-width: 1px;
-    border-color: #eee;
-`;
-
-const Title = styled.Text`
-    font-size: 20px;
-    font-weight: 600;
-    color: #222;
-`;
-
-const IconBtn = styled.TouchableOpacity`
-    padding: 8px;
-    border-radius: 16px;
-    justify-content: center;
-    align-items: center;
-`;
-
-const PreviewBlock = styled.View`
-    align-items: center;
-    margin-top: 24px;
-    margin-bottom: 8px;
-`;
-
-const IconPreviewCircle = styled.View`
-    width: 68px;
-    height: 68px;
-    border-radius: 34px;
-    background: ${(props: { bg: string }) => props.bg};
-    align-items: center;
-    justify-content: center;
-    border-width: 3px;
-    border-color: #e6eaf1;
-    margin-bottom: 2px;
-`;
-
-const BottomContent = styled.View`
-    flex: 1;
-    padding: 10px 10px 0 10px;
-    background: #fff;
-`;
-
-const WheelWrapper = styled.View`
-    align-items: center;
-    margin-bottom: 18px;
-`;
+import {
+    ModalContainer,
+    Header,
+    Title,
+    IconBtn,
+    PreviewBlock,
+    IconPreviewCircle,
+    BottomContent,
+    WheelWrapper
+} from "../../styles/components/IconColorPickerModalStyles";
+import { useTheme } from "styled-components/native";
 
 interface IconColorPickerModalProps {
     visible: boolean;
@@ -81,10 +34,12 @@ export const IconColorPickerModal: React.FC<IconColorPickerModalProps> = ({
                                                                               initialColor = "#3399ff",
                                                                               initialIcon,
                                                                               onClose,
-                                                                              onSave,
+                                                                              onSave
                                                                           }) => {
     const [previewColor, setPreviewColor] = useState(initialColor);
     const [selectedIcon, setSelectedIcon] = useState<IconItem | undefined>(initialIcon);
+
+    const theme = useTheme();
 
     useEffect(() => {
         setPreviewColor(initialColor);
@@ -101,21 +56,17 @@ export const IconColorPickerModal: React.FC<IconColorPickerModalProps> = ({
             <ModalContainer>
                 <Header>
                     <IconBtn onPress={onClose}>
-                        <MaterialIcons name="close" size={28} color="#222"/>
+                        <MaterialIcons name="close" size={28} color={theme.colors.textSecondary}/>
                     </IconBtn>
                     <Title>Оберіть колір</Title>
                     <IconBtn onPress={handleConfirm}>
-                        <MaterialIcons name="check" size={28} color="#222"/>
+                        <MaterialIcons name="check" size={28} color={theme.colors.textSecondary}/>
                     </IconBtn>
                 </Header>
 
                 <PreviewBlock>
-                    <IconPreviewCircle bg={previewColor}>
-                        <IconRenderer
-                            icon={selectedIcon}
-                            size={36}
-                            color="#fff"
-                        />
+                    <IconPreviewCircle $bg={previewColor}>
+                        <IconRenderer icon={selectedIcon} size={36} color="#fff"/>
                     </IconPreviewCircle>
                 </PreviewBlock>
 
