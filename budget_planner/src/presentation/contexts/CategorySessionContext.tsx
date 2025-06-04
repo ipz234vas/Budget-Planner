@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from "react";
-import { CategorySession } from "./CategorySession";
+import { CategorySession } from "../../domain/services/CategorySession";
 
 const SessionContext = createContext<CategorySession | null>(null);
 

@@ -3,7 +3,7 @@ import { Pressable } from "react-native";
 import styled from "styled-components/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Category } from "../../domain/models/Category";
-import { dbToIconItem } from "../services/iconParser";
+import { dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "./IconRenderer";
 
 interface CategoryItemProps {

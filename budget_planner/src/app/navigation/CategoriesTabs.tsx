@@ -6,7 +6,7 @@ import { CategoriesTabsParamList } from "../../presentation/types/CategoriesTabs
 
 const Tab = createMaterialTopTabNavigator<CategoriesTabsParamList>();
 
-export default function CategoriesTopNavigation() {
+export default function CategoriesTabs() {
     return (
         <Tab.Navigator>
             <Tab.Screen
