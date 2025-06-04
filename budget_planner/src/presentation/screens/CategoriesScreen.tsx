@@ -4,7 +4,7 @@ import CategoryList from "../components/CategoryList";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from '@react-navigation/stack';
 import { CategoriesTabsParamList } from "../types/CategoriesTabsParamList";
-import { useCategories } from "../hooks/useCategories";
+import { useCategories } from "../hooks/categories/useCategories";
 import { CategoriesStackParamList } from "../types/CategoriesStackParamList";
 
 type CategoriesScreenRoute = RouteProp<CategoriesTabsParamList, "Income" | "Expenses">;

@@ -1,9 +1,9 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { FactoryContext } from "../../app/contexts/FactoryContext";
-import { CategoryService } from "../../domain/services/CategoryService";
-import { Category } from "../../domain/models/Category";
-import { CategoryType } from "../../domain/enums/CategoryType";
+import { FactoryContext } from "../../../app/contexts/FactoryContext";
+import { CategoryService } from "../../../domain/services/CategoryService";
+import { Category } from "../../../domain/models/Category";
+import { CategoryType } from "../../../domain/enums/CategoryType";
 
 export function useCategories(type: CategoryType) {
     const factory = useContext(FactoryContext);
