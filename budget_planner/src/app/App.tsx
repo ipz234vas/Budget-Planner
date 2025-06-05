@@ -16,8 +16,15 @@ import { ChainCurrencyService } from "../data/services/currency/ChainCurrencySer
 import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
+import AccountsTabs from "./navigation/AccountsTabs";
 
 const screens: BottomTabScreen[] = [
+    {
+        name: "AccountsScreen",
+        label: "Рахунки",
+        component: AccountsTabs,
+        iconName: "card-outline",
+    },
     {
         name: "CategoriesScreen",
         label: "Категорії",

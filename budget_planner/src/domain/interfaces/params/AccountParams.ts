@@ -6,8 +6,8 @@ export interface AccountParams {
     type: AccountType;
     currentAmount: number;
     currencyCode: string;
-    color?: string | null;
-    icon?: string | null;
+    color?: string;
+    icon?: string;
     creditLimit?: number | null;
     goalAmount?: number | null;
     goalDeadline?: string | null;

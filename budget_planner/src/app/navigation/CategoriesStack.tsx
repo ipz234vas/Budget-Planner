@@ -1,7 +1,6 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import CategoryEditorScreen from "../../presentation/screens/CategoryEditorScreen";
-import { NavigationContainer } from "@react-navigation/native";
 import TopTabsNavigator from "./CategoriesTabs";
 import { useTheme } from "styled-components/native";
 
