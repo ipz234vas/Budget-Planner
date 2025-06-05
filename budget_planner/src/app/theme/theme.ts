@@ -2,7 +2,7 @@ import { DefaultTheme } from "styled-components/native";
 
 const base = {
     spacing: { xs: 4, s: 8, m: 16, l: 24, xl: 32 },
-    fontSizes: { s: 14, m: 16, l: 20, xl: 24 },
+    fontSizes: { xs: 10,s: 14, m: 16, l: 20, xl: 24 },
     borderRadius: { s: 8, m: 16, l: 24 },
     fontWeights: { regular: "400", bold: "700", semibold: "600" },
 };

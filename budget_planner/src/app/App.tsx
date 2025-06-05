@@ -5,15 +5,52 @@ import { SQLiteService } from "../data/sqlite/SQLiteService";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, lightTheme } from "./theme/theme";
 import { FactoryContext } from "./contexts/FactoryContext";
-import CategoriesStack from "./navigation/CategoriesStack";
-import { CategorySessionProvider } from "../presentation/contexts/CategorySessionContext";
 import { ScreenContainer } from "../styles/components/Layout";
+import RootNavigation, { BottomTabScreen } from "./navigation/RootNavigation";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import SettingsScreen from "../presentation/screens/SettingsScreen";
+import CategoriesScreenContainer from "../presentation/screens/CategoriesScreenContainer";
+import { ThemeType } from "../shared/types/theme";
+import { ThemeContext } from "./contexts/ThemeContext";
+
+const screens: BottomTabScreen[] = [
+    {
+        name: "CategoriesScreen",
+        label: "Категорії",
+        component: CategoriesScreenContainer,
+        iconName: "list-outline",
+    },
+    {
+        name: "SettingsScreen",
+        label: "Опції",
+        component: SettingsScreen,
+        iconName: "settings-outline",
+    },
+]
 
 export default function App() {
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [theme, setTheme] = useState<ThemeType>('light');
+    useEffect(() => {
+        getTheme();
+    }, []);
+    const getTheme = async () => {
+        try {
+            const themeValue = await AsyncStorage.getItem('@theme') as ThemeType;
+            if (themeValue)
+                setTheme(themeValue);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const toggleTheme = async () => {
         const themeValue = theme === 'dark' ? 'light' : 'dark';
-        setTheme(themeValue);
+        try {
+            await AsyncStorage.setItem('@theme', themeValue);
+            setTheme(themeValue);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     const [factory, setFactory] = useState<RepositoryFactory | null>(null);
@@ -26,15 +63,15 @@ export default function App() {
     }, []);
 
     return (
-        <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
-            <FactoryContext.Provider value={factory}>
-                <ScreenContainer>
-                    <CategorySessionProvider>
-                        <CategoriesStack/>
-                    </CategorySessionProvider>
-                    <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
-                </ScreenContainer>
-            </FactoryContext.Provider>
-        </ThemeProvider>
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+            <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
+                <FactoryContext.Provider value={factory}>
+                    <ScreenContainer>
+                        <RootNavigation screens={screens}/>
+                        <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
+                    </ScreenContainer>
+                </FactoryContext.Provider>
+            </ThemeProvider>
+        </ThemeContext.Provider>
     );
 }
