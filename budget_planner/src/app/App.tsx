@@ -12,6 +12,9 @@ import SettingsScreen from "../presentation/screens/SettingsScreen";
 import CategoriesScreenContainer from "../presentation/screens/CategoriesScreenContainer";
 import { ThemeType } from "../shared/types/theme";
 import { ThemeContext } from "./contexts/ThemeContext";
+import { ChainCurrencyService } from "../data/services/currency/ChainCurrencyService";
+import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
+import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 
 const screens: BottomTabScreen[] = [
     {
@@ -29,10 +32,13 @@ const screens: BottomTabScreen[] = [
 ]
 
 export default function App() {
+
     const [theme, setTheme] = useState<ThemeType>('light');
+
     useEffect(() => {
         getTheme();
     }, []);
+
     const getTheme = async () => {
         try {
             const themeValue = await AsyncStorage.getItem('@theme') as ThemeType;
