@@ -1,29 +1,37 @@
 import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
 import { IRepository } from "../../domain/interfaces/repositories/IRepository";
-
 import { Query } from "../builders/Query";
 
-export class Repository<T extends { id?: number | string }> implements IRepository<T> {
+export class Repository<T extends Record<string, any>> implements IRepository<T> {
     private readonly _sqliteService: ISQLiteService;
     private readonly _tableName: string;
+    private readonly _primaryKey: keyof T;
+    private readonly _autoGeneratePrimaryKey: boolean;
 
-    constructor(tableName: string, sqliteService: ISQLiteService) {
+    constructor(
+        tableName: string,
+        sqliteService: ISQLiteService,
+        primaryKey: keyof T = "id" as keyof T,
+        autoGeneratePrimaryKey: boolean = true
+    ) {
         this._sqliteService = sqliteService;
         this._tableName = tableName;
+        this._primaryKey = primaryKey;
+        this._autoGeneratePrimaryKey = autoGeneratePrimaryKey
     }
 
     query() {
         const db = this._sqliteService.getDatabase();
-        const query = new Query(db);
-        return query.table<T>(this._tableName);
+        return new Query(db).table<T>(this._tableName);
     }
 
-    async getById(id: number | string): Promise<T | null> {
+    async getById(id: T[keyof T]): Promise<T | null> {
         const rows = await this.query()
             .select()
-            .where("id", { operator: "=", value: id })
+            .where(this._primaryKey as string, { operator: "=", value: id })
             .limit(1)
             .executeAsync();
+
         return rows.length > 0 ? rows[0] : null;
     }
 
@@ -33,20 +41,34 @@ export class Repository<T extends { id?: number | string }> implements IReposito
 
     async insert(item: T): Promise<number> {
         const toInsert = { ...item };
-        delete (toInsert as any).id;
+
+        if (this._autoGeneratePrimaryKey) {
+            delete toInsert[this._primaryKey];
+        }
+
         return await this.query().insert(toInsert).executeAsync();
     }
 
     async update(item: Partial<T>): Promise<void> {
-        if (!item.id)
-            throw new Error("Cannot update entity without `id` field");
+        const keyValue = item[this._primaryKey];
+
+        if (!keyValue) {
+            throw new Error(`Cannot update entity without \`${String(this._primaryKey)}\` field`);
+        }
+
         const toUpdate = { ...item };
-        const id = toUpdate.id;
-        delete toUpdate.id;
-        await this.query().update(toUpdate).where("id", { operator: "=", value: id }).executeAsync();
+        delete toUpdate[this._primaryKey];
+
+        await this.query()
+            .update(toUpdate)
+            .where(this._primaryKey as string, { operator: "=", value: keyValue })
+            .executeAsync();
     }
 
-    async delete(id: number | string): Promise<void> {
-        await this.query().delete().where("id", { operator: "=", value: id }).executeAsync();
+    async delete(id: T[keyof T]): Promise<void> {
+        await this.query()
+            .delete()
+            .where(this._primaryKey as string, { operator: "=", value: id })
+            .executeAsync();
     }
 }
