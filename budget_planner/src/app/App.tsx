@@ -8,6 +8,23 @@ import { FactoryContext } from "./contexts/FactoryContext";
 import CategoriesStack from "./navigation/CategoriesStack";
 import { CategorySessionProvider } from "../presentation/contexts/CategorySessionContext";
 import { ScreenContainer } from "../styles/components/Layout";
+import RootNavigation, { BottomTabScreen } from "./navigation/RootNavigation";
+
+const CategoriesContainer = () => {
+    return (
+        <CategorySessionProvider>
+            <CategoriesStack/>
+        </CategorySessionProvider>)
+}
+
+const screens: BottomTabScreen[] = [
+    {
+        name: "CategoriesScreen",
+        label: "Категорії",
+        component: CategoriesContainer,
+        iconName: "list-outline",
+    },
+]
 
 export default function App() {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -29,9 +46,7 @@ export default function App() {
         <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
             <FactoryContext.Provider value={factory}>
                 <ScreenContainer>
-                    <CategorySessionProvider>
-                        <CategoriesStack/>
-                    </CategorySessionProvider>
+                    <RootNavigation screens={screens}/>
                     <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
                 </ScreenContainer>
             </FactoryContext.Provider>

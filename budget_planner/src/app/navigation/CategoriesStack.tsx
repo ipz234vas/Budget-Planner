@@ -10,17 +10,15 @@ export default function CategoriesStack() {
     const Stack = createNativeStackNavigator();
     const theme = useTheme();
     return (
-        <NavigationContainer>
-            <Stack.Navigator
-                initialRouteName="Categories"
-                screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: theme.colors.background }
-                }}
-            >
-                <Stack.Screen name="Categories" component={TopTabsNavigator}/>
-                <Stack.Screen name="CategoryEditor" component={CategoryEditorScreen}/>
-            </Stack.Navigator>
-        </NavigationContainer>
+        <Stack.Navigator
+            initialRouteName="Categories"
+            screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: theme.colors.background }
+            }}
+        >
+            <Stack.Screen name="Categories" component={TopTabsNavigator}/>
+            <Stack.Screen name="CategoryEditor" component={CategoryEditorScreen}/>
+        </Stack.Navigator>
     );
 }
