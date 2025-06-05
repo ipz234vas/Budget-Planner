@@ -1,7 +1,8 @@
 import { Category } from "../../domain/models/Category";
 import { CategoryItem } from "./CategoryItem";
-import { FlatList, NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
+import { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import React from "react";
+import { GenericList } from "./GenericList";
 
 export default function CategoryList({
                                          categories,
@@ -17,24 +18,12 @@ export default function CategoryList({
 }) {
 
     return (
-        <FlatList
-            contentContainerStyle={{
-                paddingHorizontal: 10,
-                paddingBottom: 50
-            }}
-            data={categories}
-            keyExtractor={(item) =>
-                (item.id ?? Math.random()).toString()
-            }
-            renderItem={({ item }) => (
-                <CategoryItem
-                    category={item}
-                    onDelete={() => onDelete(item.id)}
-                    onPress={() => onPress(item.id)}
-                />
-            )}
-            scrollEventThrottle={16}
-            onScroll={onScroll}
-        />
+        <GenericList<Category> data={categories} onScroll={onScroll} renderItem={(item) => (
+            <CategoryItem
+                category={item}
+                onDelete={() => onDelete(item.id)}
+                onPress={() => onPress(item.id)}
+            />
+        )}/>
     );
 }

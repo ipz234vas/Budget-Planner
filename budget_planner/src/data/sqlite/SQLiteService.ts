@@ -51,7 +51,7 @@ export class SQLiteService implements ISQLiteService {
             icon          TEXT    NULL,
             creditLimit   REAL    NULL,
             goalAmount    REAL    NULL,
-            goalDeadline  TEXT    NULL,
+            goalDeadline  TEXT    NULL
         );
       `);
     }
