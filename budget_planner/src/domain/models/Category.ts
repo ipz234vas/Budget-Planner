@@ -10,13 +10,14 @@ export class Category {
     public parentId?: number | null = null;
 
     constructor(params?: CategoryParams) {
-        if (params) {
-            this.id = params.id;
-            this.name = params.name ?? '';
-            this.type = params.type ?? CategoryType.Expense;
-            this.color = params.color;
-            this.icon = params.icon;
-            this.parentId = params.parentId ?? null;
+        if (!params) {
+            return;
         }
+        this.id = params.id;
+        this.name = params.name ?? '';
+        this.type = params.type ?? CategoryType.Expense;
+        this.color = params.color;
+        this.icon = params.icon;
+        this.parentId = params.parentId ?? null;
     }
 }

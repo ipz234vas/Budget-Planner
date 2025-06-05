@@ -40,6 +40,19 @@ export class SQLiteService implements ISQLiteService {
             parentId INTEGER,
             FOREIGN KEY (parentId) REFERENCES categories(id) ON DELETE CASCADE
         );
+        
+        CREATE TABLE IF NOT EXISTS accounts (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            name          TEXT    NOT NULL,
+            type          TEXT    CHECK (type IN ('account', 'saving') ),
+            currentAmount REAL    DEFAULT 0     NOT NULL,
+            currencyCode  TEXT    NOT NULL,
+            color         TEXT    NULL,
+            icon          TEXT    NULL,
+            creditLimit   REAL    NULL,
+            goalAmount    REAL    NULL,
+            goalDeadline  TEXT    NULL,
+        );
       `);
     }
 }
