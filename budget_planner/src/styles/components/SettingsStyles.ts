@@ -30,3 +30,8 @@ export const ThemeButtonText = styled.Text`
     font-size: ${({ theme }) => theme.fontSizes.s}px;
     color: ${({ theme }) => theme.colors.primary};
 `;
+
+export const StyledBlock = styled.View`
+    margin-top: ${({ theme }) => theme.spacing.m}px;
+    gap: 12px;
+`;

@@ -12,6 +12,10 @@ import SettingsScreen from "../presentation/screens/SettingsScreen";
 import CategoriesScreenContainer from "../presentation/screens/CategoriesScreenContainer";
 import { ThemeType } from "../shared/types/theme";
 import { ThemeContext } from "./contexts/ThemeContext";
+import { ChainCurrencyService } from "../data/services/currency/ChainCurrencyService";
+import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
+import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 
 const screens: BottomTabScreen[] = [
     {
@@ -29,10 +33,13 @@ const screens: BottomTabScreen[] = [
 ]
 
 export default function App() {
+
     const [theme, setTheme] = useState<ThemeType>('light');
+
     useEffect(() => {
         getTheme();
     }, []);
+
     const getTheme = async () => {
         try {
             const themeValue = await AsyncStorage.getItem('@theme') as ThemeType;
@@ -62,14 +69,20 @@ export default function App() {
         initFactory();
     }, []);
 
+    const [currencyService] = useState(() =>
+        new ChainCurrencyService(new NbuCurrencyHandler(new AddUahCurrencyHandler()))
+    );
+
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme }}>
             <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
                 <FactoryContext.Provider value={factory}>
-                    <ScreenContainer>
-                        <RootNavigation screens={screens}/>
-                        <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
-                    </ScreenContainer>
+                    <CurrencyProvider service={currencyService}>
+                        <ScreenContainer>
+                            <RootNavigation screens={screens}/>
+                            <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
+                        </ScreenContainer>
+                    </CurrencyProvider>
                 </FactoryContext.Provider>
             </ThemeProvider>
         </ThemeContext.Provider>
