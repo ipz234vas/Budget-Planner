@@ -1,33 +1,20 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { FactoryContext } from "../../../app/contexts/FactoryContext";
-import { Account } from "../../../domain/models/Account";
-import { IRepository } from "../../../domain/interfaces/repositories/IRepository";
 import { AccountType } from "../../../domain/enums/AccountType";
+import { Account } from "../../../domain/models/Account";
+import { useAccountService } from "./useAccountService";
 
 export function useAccounts(type: AccountType) {
-    const factory = useContext(FactoryContext);
+    const accountService = useAccountService();
     const [accounts, setAccounts] = useState<Account[]>([]);
-    const [repository, setRepository] = useState<IRepository<Account> | null>(null);
-
-    useEffect(() => {
-        if (factory) {
-            const repo = factory.getRepository(Account);
-            setRepository(repo);
-        }
-    }, [factory]);
 
     const updateAccounts = useCallback(async () => {
-        if (repository) {
-            const result =
-                await repository
-                    .query()
-                    .select()
-                    .where("type", { operator: "=", value: type })
-                    .executeAsync()
-            setAccounts(result);
+        if (!accountService) {
+            return;
         }
-    }, [repository, type]);
+        const accs = await accountService.getByType(type);
+        setAccounts(accs);
+    }, [accountService, type]);
 
     useFocusEffect(
         useCallback(() => {
@@ -36,12 +23,12 @@ export function useAccounts(type: AccountType) {
     );
 
     const deleteAccount = useCallback(async (id?: number) => {
-        if (id && repository) {
-            await repository.delete(id);
-            //delete snapshots
-            await updateAccounts();
+        if (!accountService || !id) {
+            return;
         }
-    }, [repository, updateAccounts]);
+        await accountService.delete(id);
+        await updateAccounts();
+    }, [accountService, updateAccounts]);
 
     return { accounts, deleteAccount };
 }

@@ -1,23 +1,25 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { View, TouchableOpacity } from "react-native";
+import React, { useContext, useState } from "react";
+import { TouchableOpacity, View } from "react-native";
 import { useTheme } from "styled-components/native";
-import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { IconColorPickerModal } from "../components/IconColorPickerModal";
 import { IconRenderer } from "../components/IconRenderer";
 import { CurrencyDropdown } from "../components/CurrencyDropdown";
 import {
+    CategoryInput,
+    ColorCircle,
+    EditIcon,
+    EditorInput,
+    EditorLabel,
+    FormContainer,
+    HeaderButton,
     HeaderContainer,
     HeaderSide,
     HeaderTitle,
-    HeaderButton,
-    Row,
-    CategoryInput,
     IconWrapper,
-    ColorCircle,
-    EditIcon, FormContainer, EditorLabel, EditorInput,
+    Row,
 } from "../../styles/components/EditorCommonStyles";
 import { AccountType } from "../../domain/enums/AccountType";
-import { Account } from "../../domain/models/Account";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { useCurrencyContext } from "../../app/contexts/CurrencyContext";
 import { dbToIconItem, iconItemToDb } from "../utils/iconDbMapper";
@@ -25,24 +27,13 @@ import DatePicker from "react-native-date-picker";
 import { ThemeContext } from "../../app/contexts/ThemeContext";
 import { AccountsStackParamList } from "../types/AccountsStackParamList";
 import { useCurrencyItems } from "../hooks/currencies/useCurrencyItems";
-import { FactoryContext } from "../../app/contexts/FactoryContext";
-import { IRepository } from "../../domain/interfaces/repositories/IRepository";
 import { IconItem } from "../types/icon";
 import { formatUADate } from "../utils/dateFormatter";
+import { useAccountEditor } from "../hooks/accounts/useAccountEditor"; // імпортуй свій хук!
 
 type EditorRoute = RouteProp<AccountsStackParamList, "AccountEditor">;
 
 export default function AccountEditorScreen() {
-    const factory = useContext(FactoryContext);
-    const [repository, setRepository] = useState<IRepository<Account> | null>(null);
-
-    useEffect(() => {
-        if (factory) {
-            const repo = factory.getRepository(Account);
-            setRepository(repo);
-        }
-    }, [factory]);
-
     const navigation = useNavigation();
     const route = useRoute<EditorRoute>();
     const theme = useTheme();
@@ -50,52 +41,21 @@ export default function AccountEditorScreen() {
 
     const type: AccountType = route.params?.type ?? AccountType.Saving;
     const accountId = route.params?.id;
-    const isEdit = !!accountId;
 
     const { currencies, loading: loadingCurrencies, currencyCode } = useCurrencyContext();
-
     const currencyItems = useCurrencyItems(currencies);
 
-    const [loading, setLoading] = useState(true);
-    const [accountDraft, setAccountDraft] = useState<Account>(
-        new Account({
-            name: "",
-            type,
-            currencyCode: "",
-            goalAmount: null,
-            goalDeadline: null,
-            currentAmount: 0,
-            id: accountId,
-        })
-    );
-
-    useEffect(() => {
-        const fetchAccount = async () => {
-            if (repository && isEdit && accountId) {
-                setLoading(true);
-                try {
-                    const acc = await repository.getById(accountId);
-                    if (acc) {
-                        setAccountDraft(acc);
-                    }
-                } catch (error) {
-                    console.error("Error loading account:", error);
-                } finally {
-                    setLoading(false);
-                }
-            } else setLoading(false);
-        };
-        fetchAccount();
-    }, [repository, isEdit, accountId]);
-
-    useEffect(() => {
-        if (currencyCode && !accountDraft.currencyCode) {
-            setAccountDraft(prev => ({
-                ...prev,
-                currencyCode: currencyCode,
-            }));
-        }
-    }, [currencies, currencyCode, isEdit]);
+    const {
+        loading,
+        accountDraft,
+        setAccountDraft,
+        save,
+        isEdit,
+    } = useAccountEditor({
+        id: accountId,
+        type,
+        defaultCurrencyCode: currencyCode,
+    });
 
     const [showPicker, setShowPicker] = useState(false);
     const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -112,7 +72,7 @@ export default function AccountEditorScreen() {
         setDatePickerOpen(false);
         setAccountDraft(prev => ({
             ...prev,
-            goalDeadline: date.toISOString().slice(0, 10)
+            goalDeadline: date.toISOString().slice(0, 10),
         }));
     };
 
@@ -129,21 +89,11 @@ export default function AccountEditorScreen() {
             ...prev,
             color,
             icon: iconItemToDb(icon) || prev.icon,
-        }))
+        }));
 
     const handleConfirm = async () => {
-        if (!repository) return;
-        try {
-            if (isEdit) {
-                await repository.update(accountDraft);
-            } else {
-                await repository.insert(accountDraft);
-            }
-            //якщо змінився баланс -> встановлюєм снапшот
-            navigation.goBack();
-        } catch (error) {
-            console.error("Save error:", error);
-        }
+        const ok = await save();
+        if (ok) navigation.goBack();
     };
 
     if (loading) {
@@ -166,13 +116,11 @@ export default function AccountEditorScreen() {
                         <MaterialIcons name="arrow-back-ios-new" size={24} color={theme.colors.textPrimary}/>
                     </HeaderButton>
                 </HeaderSide>
-
                 <HeaderTitle>
                     {type === AccountType.Saving
                         ? isEdit ? "Редагування банки" : "Нова банка"
                         : isEdit ? "Редагування рахунку" : "Новий рахунок"}
                 </HeaderTitle>
-
                 <HeaderSide style={{ justifyContent: "flex-end" }}>
                     <HeaderButton onPress={handleConfirm}>
                         <MaterialCommunityIcons name="content-save" size={28} color={theme.colors.positive}/>
@@ -256,7 +204,6 @@ export default function AccountEditorScreen() {
                                 cancelText="Скасувати"
                             />
                         </View>
-
                     </>
                 )}
             </FormContainer>
