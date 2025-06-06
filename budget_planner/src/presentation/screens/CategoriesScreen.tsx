@@ -12,7 +12,7 @@ export default function CategoriesScreen() {
     const { type } = useRoute<CategoriesScreenRoute>().params;
     const { categories, deleteCategory } = useCategories(type);
 
-    const navigation = useNavigation<StackNavigationProp<CategoriesStackParamList, 'CategoryEditor'>>();
+    const navigation = useNavigation<StackNavigationProp<CategoriesStackParamList, 'Categories'>>();
 
     const handlePress = (id?: number) => {
         navigation.navigate('CategoryEditor', { id: id, parentId: null, type: type });

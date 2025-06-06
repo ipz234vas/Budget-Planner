@@ -4,19 +4,13 @@ import { ThemeContext } from "../../app/contexts/ThemeContext";
 import { useCurrencyContext } from "../../app/contexts/CurrencyContext";
 import { CurrencyDropdown } from "../components/CurrencyDropdown";
 import { View } from "react-native";
+import { useCurrencyItems } from "../hooks/currencies/useCurrencyItems";
 
 const SettingsScreen: React.FC = () => {
     const { theme, toggleTheme } = useContext(ThemeContext);
     const { currencyCode, setCurrencyCode, currencies, loading } = useCurrencyContext();
 
-    const data = useMemo(
-        () =>
-            currencies.map((cur) => ({
-                label: `${cur.name} (${cur.code})`,
-                value: cur.code,
-            })),
-        [currencies]
-    );
+    const data = useCurrencyItems(currencies);
 
     return (
         <Container>
