@@ -53,6 +53,15 @@ export class SQLiteService implements ISQLiteService {
             goalAmount    REAL    NULL,
             goalDeadline  TEXT    NULL
         );
+        
+        CREATE TABLE IF NOT EXISTS snapshots (
+          id INTEGER PRIMARY KEY,
+          targetType TEXT NOT NULL CHECK (targetType IN ('account', 'planned_expense', 'planned_saving', 'planned_income')),
+          targetId INTEGER NOT NULL,
+          amount REAL NOT NULL,
+          date TEXT NOT NULL,
+          UNIQUE(targetType, targetId, date)
+        );
       `);
     }
 }
