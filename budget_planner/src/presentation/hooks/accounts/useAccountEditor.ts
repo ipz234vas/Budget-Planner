@@ -12,7 +12,6 @@ interface UseAccountEditorOptions {
 export function useAccountEditor({ id, type, defaultCurrencyCode }: UseAccountEditorOptions) {
     const accountService = useAccountService();
     const [loading, setLoading] = useState(true);
-
     const [accountDraft, setAccountDraft] = useState<Account>(
         new Account({
             name: "",
@@ -24,40 +23,63 @@ export function useAccountEditor({ id, type, defaultCurrencyCode }: UseAccountEd
             id,
         })
     );
-
     const [originalAmount, setOriginalAmount] = useState<number | null>(null);
     const isEdit = !!id;
 
-    useEffect(() => {
-        const fetchAccount = async () => {
-            if (accountService && isEdit && id) {
-                setLoading(true);
-                try {
-                    const acc = await accountService.getById(id);
-                    if (acc) {
-                        setAccountDraft(acc);
-                        setOriginalAmount(acc.currentAmount ?? 0);
-                    }
-                } catch (error) {
-                    console.error("Error loading account:", error);
-                } finally {
-                    setLoading(false);
-                }
+    const resetDraftState = useCallback(() => {
+        setAccountDraft(
+            new Account({
+                name: "",
+                type,
+                currencyCode: defaultCurrencyCode ?? "",
+                goalAmount: null,
+                goalDeadline: null,
+                currentAmount: 0,
+                id,
+            })
+        );
+        setOriginalAmount(null);
+        setLoading(false);
+    }, [type, defaultCurrencyCode, id]);
+
+    const handleAccountLoaded = useCallback((acc: Account) => {
+        setAccountDraft(acc);
+        setOriginalAmount(acc.currentAmount ?? 0);
+    }, []);
+
+    const handleAccountError = useCallback((error: unknown) => {
+        console.error("Error loading account:", error);
+    }, []);
+
+    const loadAccount = useCallback(async () => {
+        if (!accountService || !isEdit || !id) {
+            resetDraftState();
+            return;
+        }
+        setLoading(true);
+        try {
+            const acc = await accountService.getById(id);
+            if (acc) {
+                handleAccountLoaded(acc);
             } else {
-                setLoading(false);
-                setOriginalAmount(null);
+                resetDraftState();
             }
-        };
-        fetchAccount();
-    }, [accountService, isEdit, id]);
+        } catch (error) {
+            handleAccountError(error);
+        } finally {
+            setLoading(false);
+        }
+    }, [accountService, isEdit, id, handleAccountLoaded, resetDraftState, handleAccountError]);
+
+    useEffect(() => {
+        loadAccount();
+    }, [loadAccount]);
 
     const save = useCallback(async () => {
         if (!accountService) {
             return false;
         }
-
         await accountService.save(accountDraft, originalAmount);
-
         return true;
     }, [accountService, accountDraft, originalAmount]);
 

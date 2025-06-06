@@ -24,25 +24,42 @@ export class AccountService {
             .executeAsync();
     }
 
-    //зарефакторити
     async save(account: Account, originalAmount?: number | null): Promise<number | undefined> {
         let accountId = account.id;
+
         if (accountId) {
-            await this.accountRepository.update(account);
+            await this.updateAccount(account);
         } else {
-            accountId = await this.accountRepository.insert(account);
+            accountId = await this.createAccount(account);
         }
-        const amountChanged = !account.id || originalAmount !== account.currentAmount;
-        if (amountChanged && accountId) {
-            const snapshot = new Snapshot({
-                targetType: SnapshotTargetType.Account,
-                targetId: accountId,
-                amount: account.currentAmount,
-                date: new Date().toISOString(),
-            });
-            await this.snapshotRepository.insert(snapshot);
+
+        if (this.shouldCreateSnapshot(account, originalAmount)) {
+            await this.createSnapshot(accountId!, account.currentAmount);
         }
+
         return accountId;
+    }
+
+    private async updateAccount(account: Account): Promise<void> {
+        await this.accountRepository.update(account);
+    }
+
+    private async createAccount(account: Account): Promise<number> {
+        return this.accountRepository.insert(account);
+    }
+
+    private shouldCreateSnapshot(account: Account, originalAmount?: number | null): boolean {
+        return !account.id || originalAmount !== account.currentAmount;
+    }
+
+    private async createSnapshot(accountId: number, amount: number): Promise<void> {
+        const snapshot = new Snapshot({
+            targetType: SnapshotTargetType.Account,
+            targetId: accountId,
+            amount,
+            date: new Date().toISOString(),
+        });
+        await this.snapshotRepository.insert(snapshot);
     }
 
     async delete(id: number) {
