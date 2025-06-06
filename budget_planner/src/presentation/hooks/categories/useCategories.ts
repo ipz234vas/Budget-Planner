@@ -37,5 +37,5 @@ export function useCategories(type: CategoryType) {
         }
     }, [service, updateCategories]);
 
-    return { categories, updateCategories, deleteCategory };
+    return { categories, deleteCategory };
 }

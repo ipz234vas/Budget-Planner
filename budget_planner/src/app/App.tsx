@@ -16,8 +16,17 @@ import { ChainCurrencyService } from "../data/services/currency/ChainCurrencySer
 import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
+import AccountsTabs from "./navigation/AccountsTabs";
+import AccountEditorScreen from "../presentation/screens/AccountEditorScreen";
+import AccountsStack from "./navigation/AccountsStack";
 
 const screens: BottomTabScreen[] = [
+    {
+        name: "AccountsScreen",
+        label: "Рахунки",
+        component: AccountsStack,
+        iconName: "card-outline",
+    },
     {
         name: "CategoriesScreen",
         label: "Категорії",
@@ -46,7 +55,7 @@ export default function App() {
             if (themeValue)
                 setTheme(themeValue);
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     };
 
@@ -56,7 +65,7 @@ export default function App() {
             await AsyncStorage.setItem('@theme', themeValue);
             setTheme(themeValue);
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     };
 

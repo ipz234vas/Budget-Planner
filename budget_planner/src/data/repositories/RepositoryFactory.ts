@@ -2,6 +2,8 @@ import { Repository } from "./Repository";
 import { ISQLiteService } from "../../domain/interfaces/sqlite/ISQLiteService";
 import { Category } from "../../domain/models/Category";
 import { IRepository } from "../../domain/interfaces/repositories/IRepository";
+import { Account } from "../../domain/models/Account";
+import { Snapshot } from "../../domain/models/Snapshot";
 
 export class RepositoryFactory {
     private readonly _sqliteService: ISQLiteService;
@@ -20,6 +22,10 @@ export class RepositoryFactory {
         let repo: IRepository<T> | null = null;
         if (key === Category.name) {
             repo = new Repository<Category>("categories", this._sqliteService) as unknown as IRepository<T>;
+        } else if (key === Account.name) {
+            repo = new Repository<Account>("accounts", this._sqliteService) as unknown as IRepository<T>;
+        } else if (key === Snapshot.name) {
+            repo = new Repository<Snapshot>("snapshots", this._sqliteService) as unknown as IRepository<T>;
         }
 
         if (repo) {
