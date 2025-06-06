@@ -5,14 +5,12 @@ import { Account } from "../../domain/models/Account";
 import { dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "./IconRenderer";
 import {
-    ItemContainer,
-    IconWrapper,
-    DeleteButton,
     TextBlock,
     AccountName,
     AccountBalance
 } from "../../styles/components/AccountItemStyles";
 import { useTheme } from "styled-components/native";
+import { DeleteButton, IconWrapper, ItemContainer } from "../../styles/components/ItemCommonStyles";
 
 interface AccountItemProps {
     account: Account;

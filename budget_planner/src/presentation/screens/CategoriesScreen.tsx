@@ -5,7 +5,6 @@ import { CategoriesStackParamList } from "../types/CategoriesStackParamList";
 import { useCategories } from "../hooks/categories/useCategories";
 import { EntityScreen } from "./EntityScreen";
 import { CategoryItem } from "../components/CategoryItem";
-import { Category } from "../../domain/models/Category";
 
 type CategoriesScreenRoute = RouteProp<CategoriesTabsParamList, "Income" | "Expenses">;
 

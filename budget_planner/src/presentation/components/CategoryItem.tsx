@@ -5,12 +5,10 @@ import { Category } from "../../domain/models/Category";
 import { dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "./IconRenderer";
 import {
-    ItemContainer,
-    IconWrapper,
     CategoryName,
-    DeleteButton
 } from "../../styles/components/CategoryItemStyles";
 import { useTheme } from "styled-components/native";
+import { DeleteButton, IconWrapper, ItemContainer } from "../../styles/components/ItemCommonStyles";
 
 interface CategoryItemProps {
     category: Category;

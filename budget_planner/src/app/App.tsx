@@ -17,12 +17,13 @@ import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import AccountsTabs from "./navigation/AccountsTabs";
+import AccountEditorScreen from "../presentation/screens/AccountEditorScreen";
 
 const screens: BottomTabScreen[] = [
     {
         name: "AccountsScreen",
         label: "Рахунки",
-        component: AccountsTabs,
+        component: AccountEditorScreen,
         iconName: "card-outline",
     },
     {

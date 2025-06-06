@@ -16,10 +16,9 @@ import {
     IconWrapper,
     ColorCircle,
     EditIcon,
-    SubtitleRow,
-    SubTitle
-} from "../../styles/components/CategoryEditorStyles";
+} from "../../styles/components/EditorCommonStyles";
 import { useTheme } from "styled-components/native";
+import { SubTitle, SubtitleRow } from "../../styles/components/CategoryEditorStyles";
 
 export default function CategoryEditorScreen() {
     const {
@@ -99,7 +98,7 @@ export default function CategoryEditorScreen() {
                         />
                     </ColorCircle>
                     <TouchableOpacity onPress={() => setShowPicker(true)}>
-                        <EditIcon name="edit" size={16} color={theme.colors.textPrimary} />
+                        <EditIcon name="edit" size={16} color={theme.colors.textPrimary}/>
                     </TouchableOpacity>
                 </IconWrapper>
             </Row>

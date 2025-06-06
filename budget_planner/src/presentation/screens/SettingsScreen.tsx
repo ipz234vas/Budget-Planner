@@ -26,7 +26,7 @@ const SettingsScreen: React.FC = () => {
                     <ThemeButtonText>{theme === "dark" ? "Темна" : "Світла"}</ThemeButtonText>
                 </ThemeButton>
             </Row>
-            <View style={{ paddingTop: 20 }}>
+            <View style={{ paddingTop: 20, gap: 12 }}>
                 <Label>Валюта за замовчуванням</Label>
                 <CurrencyDropdown
                     data={data}

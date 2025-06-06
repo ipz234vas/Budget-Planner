@@ -20,7 +20,8 @@
         "foregroundImage": "./src/shared/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.ipz234_vas.budget_planner"
     },
     "web": {
       "favicon": "./src/shared/assets/favicon.png"

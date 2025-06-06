@@ -3,7 +3,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Currency } from "../../domain/models/Currency";
 import { ChainCurrencyService } from "../../data/services/currency/ChainCurrencyService";
 
-// Створи інтерфейс контексту
 interface CurrencyContextProps {
     currencyCode: string | null;
     setCurrencyCode: (code: string) => void;
