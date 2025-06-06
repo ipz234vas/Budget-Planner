@@ -28,6 +28,7 @@ import { useCurrencyItems } from "../hooks/currencies/useCurrencyItems";
 import { FactoryContext } from "../../app/contexts/FactoryContext";
 import { IRepository } from "../../domain/interfaces/repositories/IRepository";
 import { IconItem } from "../types/icon";
+import { formatUADate } from "../utils/dateFormatter";
 
 type EditorRoute = RouteProp<AccountsStackParamList, "AccountEditor">;
 
@@ -103,7 +104,7 @@ export default function AccountEditorScreen() {
         const value = text.replace(/[^0-9.]/g, "");
         setAccountDraft(prev => ({
             ...prev,
-            goalAmount: value ? Number(value) : null,
+            goalAmount: value ? Number(value) : 0,
         }));
     };
 
@@ -130,16 +131,6 @@ export default function AccountEditorScreen() {
             icon: iconItemToDb(icon) || prev.icon,
         }))
 
-    function formatUADate(iso: string | null) {
-        if (!iso)
-            return "";
-        const date = new Date(iso);
-        if (isNaN(date.getTime()))
-            return "";
-
-        return date.toLocaleDateString("uk-UA", { year: "numeric", month: "long", day: "numeric" });
-    }
-
     const handleConfirm = async () => {
         if (!repository) return;
         try {
@@ -148,6 +139,7 @@ export default function AccountEditorScreen() {
             } else {
                 await repository.insert(accountDraft);
             }
+            //якщо змінився баланс -> встановлюєм снапшот
             navigation.goBack();
         } catch (error) {
             console.error("Save error:", error);
@@ -233,7 +225,7 @@ export default function AccountEditorScreen() {
                             <EditorLabel>Ціль</EditorLabel>
                             <EditorInput
                                 keyboardType="numeric"
-                                value={accountDraft.currentAmount ? String(accountDraft.goalAmount) : ""}
+                                value={accountDraft.goalAmount ? String(accountDraft.goalAmount) : ""}
                                 onChangeText={handleGoalAmountChange}
                                 placeholder="0"
                                 placeholderTextColor={theme.colors.textSecondary}

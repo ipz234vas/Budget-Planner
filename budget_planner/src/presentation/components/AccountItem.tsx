@@ -7,10 +7,16 @@ import { IconRenderer } from "./IconRenderer";
 import {
     TextBlock,
     AccountName,
-    AccountBalance
+    AccountBalance,
+    GoalText,
+    DeadlineText,
+    GoalBlock,
+    RightBlock
 } from "../../styles/components/AccountItemStyles";
 import { useTheme } from "styled-components/native";
 import { DeleteButton, IconWrapper, ItemContainer } from "../../styles/components/ItemCommonStyles";
+import { AccountType } from "../../domain/enums/AccountType";
+import { formatUADate } from "../utils/dateFormatter";
 
 interface AccountItemProps {
     account: Account;
@@ -25,6 +31,37 @@ export const AccountItem: React.FC<AccountItemProps> = ({
                                                         }) => {
     const [pressed, setPressed] = useState(false);
     const theme = useTheme();
+
+    const isSaving = account.type === AccountType.Saving;
+    const hasGoal = isSaving && !!account.goalAmount && !!account.currencyCode;
+    const isGoalReached = hasGoal && account.currentAmount >= (account.goalAmount ?? 0);
+
+    const goalColor = isGoalReached
+        ? theme.colors.positive
+        : theme.colors.textPrimary;
+
+    const hasDeadline = isSaving && !!account.goalDeadline;
+
+    let deadlineColor = theme.colors.textSecondary;
+    let formattedDeadline = "";
+    let isDeadlineExpired = false;
+    let isDeadlineReached = false;
+
+    if (hasDeadline) {
+        formattedDeadline = formatUADate(account.goalDeadline as string);
+        const deadlineDate = new Date(account.goalDeadline as string);
+        formattedDeadline = "до " + formatUADate(account.goalDeadline as string);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (isGoalReached) {
+            isDeadlineReached = true;
+            deadlineColor = theme.colors.positive;
+        } else if (deadlineDate < today) {
+            isDeadlineExpired = true;
+            deadlineColor = theme.colors.negative;
+        }
+    }
 
     return (
         <Pressable
@@ -43,18 +80,33 @@ export const AccountItem: React.FC<AccountItemProps> = ({
 
                 <TextBlock>
                     <AccountName>{account.name}</AccountName>
-                    <AccountBalance>
-                        {account.currentAmount.toFixed(2)} {account.currencyCode}
-                    </AccountBalance>
+                    {hasGoal ? (
+                        <GoalBlock>
+                            <AccountBalance style={{ color: goalColor }}>
+                                {account.currentAmount.toFixed(2)} {account.currencyCode} / {account.goalAmount} {account.currencyCode}
+                            </AccountBalance>
+                        </GoalBlock>
+                    ) : (
+                        <AccountBalance>
+                            {account.currentAmount.toFixed(2)} {account.currencyCode}
+                        </AccountBalance>
+                    )}
                 </TextBlock>
 
-                <DeleteButton onPress={onDelete} hitSlop={10}>
-                    <MaterialCommunityIcons
-                        name="trash-can-outline"
-                        size={24}
-                        color={theme.colors.negative}
-                    />
-                </DeleteButton>
+                <RightBlock>
+                    {hasDeadline && (
+                        <DeadlineText style={{ color: deadlineColor }}>
+                            {formattedDeadline}
+                        </DeadlineText>
+                    )}
+                    <DeleteButton onPress={onDelete} hitSlop={10}>
+                        <MaterialCommunityIcons
+                            name="trash-can-outline"
+                            size={24}
+                            color={theme.colors.negative}
+                        />
+                    </DeleteButton>
+                </RightBlock>
             </ItemContainer>
         </Pressable>
     );
