@@ -1,6 +1,4 @@
 import React from "react";
-import CategoriesScreen from "../../presentation/screens/CategoriesScreen";
-import { CategoryType } from "../../domain/enums/CategoryType";
 import { GenericTopTabs } from "./GenericTopTabs";
 import { AccountsTabsParamList } from "../../presentation/types/AccountsTabsParamList";
 import AccountsScreen from "../../presentation/screens/AccountsScreen";
