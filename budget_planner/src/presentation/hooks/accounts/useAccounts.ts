@@ -4,30 +4,37 @@ import { FactoryContext } from "../../../app/contexts/FactoryContext";
 import { Account } from "../../../domain/models/Account";
 import { IRepository } from "../../../domain/interfaces/repositories/IRepository";
 import { AccountType } from "../../../domain/enums/AccountType";
+import { Snapshot } from "../../../domain/models/Snapshot";
+import { SnapshotTargetType } from "../../../domain/enums/SnapshotTargetType";
 
 export function useAccounts(type: AccountType) {
     const factory = useContext(FactoryContext);
     const [accounts, setAccounts] = useState<Account[]>([]);
-    const [repository, setRepository] = useState<IRepository<Account> | null>(null);
+    const [accountRepository, setAccountRepository] = useState<IRepository<Account> | null>(null);
+    const [snapshotRepository, setSnapshotRepository] = useState<IRepository<Snapshot> | null>(null);
 
     useEffect(() => {
         if (factory) {
-            const repo = factory.getRepository(Account);
-            setRepository(repo);
+            const accountRepo = factory.getRepository(Account);
+            setAccountRepository(accountRepo);
+            const snapshotRepo = factory.getRepository(Snapshot);
+            setSnapshotRepository(snapshotRepo);
         }
     }, [factory]);
 
     const updateAccounts = useCallback(async () => {
-        if (repository) {
-            const result =
-                await repository
-                    .query()
-                    .select()
-                    .where("type", { operator: "=", value: type })
-                    .executeAsync()
-            setAccounts(result);
+        if (!accountRepository) {
+            return;
         }
-    }, [repository, type]);
+        const accounts =
+            await accountRepository
+                .query()
+                .select()
+                .where("type", { operator: "=", value: type })
+                .executeAsync()
+
+        setAccounts(accounts);
+    }, [accountRepository, type]);
 
     useFocusEffect(
         useCallback(() => {
@@ -36,12 +43,31 @@ export function useAccounts(type: AccountType) {
     );
 
     const deleteAccount = useCallback(async (id?: number) => {
-        if (id && repository) {
-            await repository.delete(id);
-            //delete snapshots
-            await updateAccounts();
+        if (!id || !accountRepository) {
+            return;
         }
-    }, [repository, updateAccounts]);
+
+        await accountRepository.delete(id);
+        await updateAccounts();
+
+        if (!snapshotRepository) {
+            return;
+        }
+
+        await snapshotRepository
+            .query()
+            .delete()
+            .where("targetId", {
+                operator: "=",
+                value: id
+            })
+            .where("targetType", {
+                operator: "=",
+                value: SnapshotTargetType.Account
+            })
+            .executeAsync();
+
+    }, [accountRepository, updateAccounts]);
 
     return { accounts, deleteAccount };
 }

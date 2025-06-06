@@ -1,20 +1,23 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import { View, TouchableOpacity } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import { TouchableOpacity, View } from "react-native";
 import { useTheme } from "styled-components/native";
-import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { IconColorPickerModal } from "../components/IconColorPickerModal";
 import { IconRenderer } from "../components/IconRenderer";
 import { CurrencyDropdown } from "../components/CurrencyDropdown";
 import {
+    CategoryInput,
+    ColorCircle,
+    EditIcon,
+    EditorInput,
+    EditorLabel,
+    FormContainer,
+    HeaderButton,
     HeaderContainer,
     HeaderSide,
     HeaderTitle,
-    HeaderButton,
-    Row,
-    CategoryInput,
     IconWrapper,
-    ColorCircle,
-    EditIcon, FormContainer, EditorLabel, EditorInput,
+    Row,
 } from "../../styles/components/EditorCommonStyles";
 import { AccountType } from "../../domain/enums/AccountType";
 import { Account } from "../../domain/models/Account";
@@ -29,17 +32,23 @@ import { FactoryContext } from "../../app/contexts/FactoryContext";
 import { IRepository } from "../../domain/interfaces/repositories/IRepository";
 import { IconItem } from "../types/icon";
 import { formatUADate } from "../utils/dateFormatter";
+import { Snapshot } from "../../domain/models/Snapshot";
+import { SnapshotTargetType } from "../../domain/enums/SnapshotTargetType";
 
 type EditorRoute = RouteProp<AccountsStackParamList, "AccountEditor">;
 
 export default function AccountEditorScreen() {
     const factory = useContext(FactoryContext);
     const [repository, setRepository] = useState<IRepository<Account> | null>(null);
+    const [snapshotRepository, setSnapshotRepository] = useState<IRepository<Snapshot> | null>(null);
 
     useEffect(() => {
         if (factory) {
             const repo = factory.getRepository(Account);
             setRepository(repo);
+
+            const snapRepo = factory.getRepository(Snapshot);
+            setSnapshotRepository(snapRepo);
         }
     }, [factory]);
 
@@ -68,6 +77,7 @@ export default function AccountEditorScreen() {
             id: accountId,
         })
     );
+    const [originalAmount, setOriginalAmount] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchAccount = async () => {
@@ -77,13 +87,17 @@ export default function AccountEditorScreen() {
                     const acc = await repository.getById(accountId);
                     if (acc) {
                         setAccountDraft(acc);
+                        setOriginalAmount(acc.currentAmount ?? 0); // тут зберігаємо
                     }
                 } catch (error) {
                     console.error("Error loading account:", error);
                 } finally {
                     setLoading(false);
                 }
-            } else setLoading(false);
+            } else {
+                setLoading(false);
+                setOriginalAmount(null); // для нових акаунтів
+            }
         };
         fetchAccount();
     }, [repository, isEdit, accountId]);
@@ -132,14 +146,31 @@ export default function AccountEditorScreen() {
         }))
 
     const handleConfirm = async () => {
-        if (!repository) return;
+        if (!repository || !snapshotRepository) return;
         try {
+            let accountIdAfterSave = accountDraft.id;
+
             if (isEdit) {
                 await repository.update(accountDraft);
             } else {
-                await repository.insert(accountDraft);
+                accountIdAfterSave = await repository.insert(accountDraft);
             }
-            //якщо змінився баланс -> встановлюєм снапшот
+
+            const amountChanged = !isEdit || originalAmount !== accountDraft.currentAmount;
+
+            if (amountChanged && accountIdAfterSave) {
+                const today = new Date().toISOString();
+
+                const snapshot = new Snapshot({
+                    targetType: SnapshotTargetType.Account,
+                    targetId: accountIdAfterSave,
+                    amount: accountDraft.currentAmount,
+                    date: today
+                });
+
+                await snapshotRepository.insert(snapshot);
+            }
+
             navigation.goBack();
         } catch (error) {
             console.error("Save error:", error);
