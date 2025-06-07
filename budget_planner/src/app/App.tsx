@@ -89,13 +89,21 @@ export default function App() {
             console.log(await repositoryFactory.getRepository(Category)?.getAll())
             console.log(await repositoryFactory.getRepository(Account)?.getAll())
 
+            const date = new Date();
+            date.setDate(date.getDate() + 3);
+            const dateStr = date.toISOString().slice(0, 10);
+
             const repo = repositoryFactory.getRepository(Transaction)!
             try {
-
-
                 await repo.insert(new Transaction({
-                    amount: 20, type: TransactionType.Income, currencyCode: "UAH",
-                    date: new Date().toISOString().slice(0, 10), categoryId: 18, fromAccountId: 2, toAccountId: 4, time: new Date().toTimeString().slice(0, 8)
+                    amount: 20,
+                    type: TransactionType.Income,
+                    currencyCode: "UAH",
+                    date: dateStr,
+                    categoryId: 18,
+                    fromAccountId: 2,
+                    toAccountId: 4,
+                    time: new Date().toTimeString().slice(0, 8)
                 }));
             } catch (error) {
                 console.error(error);
