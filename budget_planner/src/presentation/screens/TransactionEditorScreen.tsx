@@ -22,6 +22,8 @@ import { Category } from "../../domain/models/Category";
 import CategoryPickerModal from "../components/CategoryPickerModal";
 import { CategoryType } from "../../domain/enums/CategoryType";
 import { DropdownItem } from "../components/DropdownItem";
+import { AccountType } from "../../domain/enums/AccountType";
+import AccountPickerModal from "../components/AccountPickerModal";
 
 export default function TransactionEditorScreen() {
     const nav = useNavigation();
@@ -39,6 +41,8 @@ export default function TransactionEditorScreen() {
     const [pickerOpen, setPickerOpen] = useState(false);
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+    const [fromAccountModalOpen, setFromAccountModalOpen] = useState(false);
+    const [toAccountModalOpen, setToAccountModalOpen] = useState(false);
 
     const [useCustomRate, setUseCustomRate] = useState(false);
     const [equivBase, setEquivBase] = useState("");
@@ -169,18 +173,26 @@ export default function TransactionEditorScreen() {
                     )}
 
                     {showFrom && (
-                        <TouchableOpacity onPress={() => console.log("open from-account")}>
+                        <TouchableOpacity onPress={() => setFromAccountModalOpen(true)}>
                             <EditorLabel>З рахунку</EditorLabel>
-                            <EditorInput editable={false} value={fromAcc?.name} placeholder="Обрати... "
-                                         placeholderTextColor={theme.colors.textSecondary}/>
+                            <EditorInput
+                                editable={false}
+                                value={fromAcc?.name}
+                                placeholder="Обрати..."
+                                placeholderTextColor={theme.colors.textSecondary}
+                            />
                         </TouchableOpacity>
                     )}
 
                     {showTo && (
-                        <TouchableOpacity onPress={() => console.log("open to-account")}>
+                        <TouchableOpacity onPress={() => setToAccountModalOpen(true)}>
                             <EditorLabel>На рахунок</EditorLabel>
-                            <EditorInput editable={false} value={toAcc?.name} placeholder="Обрати..."
-                                         placeholderTextColor={theme.colors.textSecondary}/>
+                            <EditorInput
+                                editable={false}
+                                value={toAcc?.name}
+                                placeholder="Обрати..."
+                                placeholderTextColor={theme.colors.textSecondary}
+                            />
                         </TouchableOpacity>
                     )}
 
@@ -218,10 +230,8 @@ export default function TransactionEditorScreen() {
                         </>
                     )}
 
-                    {showTo &&
-                        fromAcc?.currencyCode &&
-                        toAcc?.currencyCode &&
-                        fromAcc.currencyCode !== toAcc.currencyCode && (
+                    {showTo && fromAcc?.currencyCode && toAcc?.currencyCode
+                        && fromAcc.currencyCode !== toAcc.currencyCode && type == TransactionType.Transfer && (
                             <>
                                 <EditorLabel>Сума, що надходить ({toAcc.currencyCode})</EditorLabel>
                                 <EditorInput editable={false} value={toAmount}
@@ -262,6 +272,31 @@ export default function TransactionEditorScreen() {
                     setCategoryModalVisible(false);
                 }}
             />
+
+            <AccountPickerModal
+                visible={fromAccountModalOpen}
+                onClose={() => setFromAccountModalOpen(false)}
+                onSelect={(acc) => {
+                    setFrom(acc);
+                    setFromAccountModalOpen(false);
+                    if (type === TransactionType.Transfer && toAcc?.id === acc.id) setTo(null);
+                }}
+                excludeId={type === TransactionType.Transfer ? toAcc?.id : undefined}
+                initialType={AccountType.Account}
+            />
+
+            <AccountPickerModal
+                visible={toAccountModalOpen}
+                onClose={() => setToAccountModalOpen(false)}
+                onSelect={(acc) => {
+                    setTo(acc);
+                    setToAccountModalOpen(false);
+                    if (type === TransactionType.Transfer && fromAcc?.id === acc.id) setFrom(null);
+                }}
+                excludeId={type === TransactionType.Transfer ? fromAcc?.id : undefined}
+                initialType={AccountType.Account}
+            />
+
 
             <DatePicker
                 modal

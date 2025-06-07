@@ -18,15 +18,18 @@ export class CurrencyConverter {
         dateISO: string,
         customRate?: number
     ): Promise<number> {
-        if (from === to)
+        if (from === to) {
             return amount;
-        if (customRate)
-            return customRate;
+        }
 
-        const [rFrom, rTo] = await Promise.all([
-            this.rates.getRateToUAH(from, dateISO),
-            this.rates.getRateToUAH(to, dateISO),
-        ]);
+        let rFrom;
+        if (customRate) {
+            rFrom = customRate;
+        } else {
+            rFrom = await this.rates.getRateToUAH(from, dateISO);
+        }
+
+        const rTo = await this.rates.getRateToUAH(to, dateISO);
         return amount * (rFrom / rTo);
     }
 }
