@@ -1,18 +1,27 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { View, TouchableOpacity, ScrollView, Switch } from "react-native";
+import { ScrollView, Switch, TouchableOpacity, View } from "react-native";
 import { useTheme } from "styled-components/native";
-import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import DatePicker from "react-native-date-picker";
 import { TransactionType } from "../../domain/enums/TransactionType";
 import {
-    HeaderContainer, HeaderSide, HeaderButton, HeaderTitle,
-    EditorLabel, EditorInput, FormContainer, Row,
+    EditorInput,
+    EditorLabel,
+    FormContainer,
+    HeaderButton,
+    HeaderContainer,
+    HeaderSide,
+    HeaderTitle,
 } from "../../styles/components/EditorCommonStyles";
 import { ThemeContext } from "../../app/contexts/ThemeContext";
 import { UniversalDropdown } from "../components/UniversalDropdown";
 import { useCurrencyConverter } from "../hooks/currencies/useCurrencyConverter";
 import { Account } from "../../domain/models/Account";
+import { Category } from "../../domain/models/Category";
+import CategoryPickerModal from "../components/CategoryPickerModal";
+import { CategoryType } from "../../domain/enums/CategoryType";
+import { DropdownItem } from "../components/DropdownItem";
 
 export default function TransactionEditorScreen() {
     const nav = useNavigation();
@@ -28,6 +37,8 @@ export default function TransactionEditorScreen() {
     const [desc, setDesc] = useState("");
     const [dateTime, setDateTime] = useState(new Date());
     const [pickerOpen, setPickerOpen] = useState(false);
+    const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
     const [useCustomRate, setUseCustomRate] = useState(false);
     const [equivBase, setEquivBase] = useState("");
@@ -35,13 +46,17 @@ export default function TransactionEditorScreen() {
 
     const [toAmount, setToAmount] = useState("");
 
-    const showCat = type !== "transfer";
-    const showFrom = type !== "income";
-    const showTo = type !== "expense";
+    const showCat = type !== TransactionType.Transfer;
+    const showFrom = type !== TransactionType.Income;
+    const showTo = type !== TransactionType.Expense;
 
     const amountCurrency = useMemo(() => (
-        type === "income" ? toAcc?.currencyCode : fromAcc?.currencyCode
+        type === TransactionType.Income ? toAcc?.currencyCode : fromAcc?.currencyCode
     ), [type, fromAcc, toAcc]);
+
+    useEffect(() => {
+        setSelectedCategory(null)
+    }, [type]);
 
     useEffect(() => {
         (async () => {
@@ -133,6 +148,9 @@ export default function TransactionEditorScreen() {
                     <View>
                         <EditorLabel>Тип</EditorLabel>
                         <UniversalDropdown
+                            renderItem={(item, selected) => (
+                                <DropdownItem item={item} selected={!!selected}/>
+                            )}
                             data={typeItems}
                             labelField="label"
                             valueField="value"
@@ -143,23 +161,26 @@ export default function TransactionEditorScreen() {
                     </View>
 
                     {showCat && (
-                        <TouchableOpacity onPress={() => console.log("open cat-picker")}>
+                        <TouchableOpacity onPress={() => setCategoryModalVisible(true)}>
                             <EditorLabel>Категорія</EditorLabel>
-                            <EditorInput editable={false} value={category} placeholder="Обрати..."/>
+                            <EditorInput editable={false} value={selectedCategory?.name || ""} placeholder="Обрати..."
+                                         placeholderTextColor={theme.colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
 
                     {showFrom && (
                         <TouchableOpacity onPress={() => console.log("open from-account")}>
                             <EditorLabel>З рахунку</EditorLabel>
-                            <EditorInput editable={false} value={fromAcc?.name} placeholder="Обрати..."/>
+                            <EditorInput editable={false} value={fromAcc?.name} placeholder="Обрати... "
+                                         placeholderTextColor={theme.colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
 
                     {showTo && (
                         <TouchableOpacity onPress={() => console.log("open to-account")}>
                             <EditorLabel>На рахунок</EditorLabel>
-                            <EditorInput editable={false} value={toAcc?.name} placeholder="Обрати..."/>
+                            <EditorInput editable={false} value={toAcc?.name} placeholder="Обрати..."
+                                         placeholderTextColor={theme.colors.textSecondary}/>
                         </TouchableOpacity>
                     )}
 
@@ -170,6 +191,7 @@ export default function TransactionEditorScreen() {
                             value={amount}
                             onChangeText={setAmount}
                             placeholder="0"
+                            placeholderTextColor={theme.colors.textSecondary}
                         />
                     </View>
 
@@ -182,6 +204,7 @@ export default function TransactionEditorScreen() {
                                 value={equivBase}
                                 onChangeText={setEquivBase}
                                 placeholder="0"
+                                placeholderTextColor={theme.colors.textSecondary}
                             />
                             <View style={{ flexDirection: "row" }}>
                                 <Switch thumbColor={theme.colors.secondaryBackground}
@@ -201,7 +224,8 @@ export default function TransactionEditorScreen() {
                         fromAcc.currencyCode !== toAcc.currencyCode && (
                             <>
                                 <EditorLabel>Сума, що надходить ({toAcc.currencyCode})</EditorLabel>
-                                <EditorInput editable={false} value={toAmount}/>
+                                <EditorInput editable={false} value={toAmount}
+                                             placeholderTextColor={theme.colors.textSecondary}/>
                             </>
                         )}
 
@@ -210,6 +234,7 @@ export default function TransactionEditorScreen() {
                         <EditorInput
                             editable={false}
                             value={`${formatDate(dateTime)}  ${formatTime(dateTime)}`}
+                            placeholderTextColor={theme.colors.textSecondary}
                         />
                     </TouchableOpacity>
 
@@ -221,11 +246,22 @@ export default function TransactionEditorScreen() {
                             placeholder="Коментар"
                             multiline
                             style={{ height: 80 }}
+                            placeholderTextColor={theme.colors.textSecondary}
                         />
                     </View>
 
                 </FormContainer>
             </ScrollView>
+
+            <CategoryPickerModal
+                visible={categoryModalVisible}
+                type={type as unknown as CategoryType}
+                onClose={() => setCategoryModalVisible(false)}
+                onSelect={(cat) => {
+                    setSelectedCategory(cat);
+                    setCategoryModalVisible(false);
+                }}
+            />
 
             <DatePicker
                 modal

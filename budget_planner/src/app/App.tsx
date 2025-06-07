@@ -19,6 +19,7 @@ import { CurrencyProvider } from "./contexts/CurrencyContext";
 import AccountsStack from "./navigation/AccountsStack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import TransactionEditorScreen from "../presentation/screens/TransactionEditorScreen";
+import TransactionsScreen from "../presentation/screens/TransactionsScreen";
 
 const screens: BottomTabScreen[] = [
     {
