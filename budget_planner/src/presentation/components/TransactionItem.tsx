@@ -199,7 +199,6 @@ export const TransactionItem: React.FC<Props> = ({
                     </IconWrapper>
                 </IconContainer>
 
-                {/* label & account */}
                 <LabelBlock>
                     <CategoryLabel>{vm.label}</CategoryLabel>
 

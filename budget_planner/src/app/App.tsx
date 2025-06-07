@@ -18,7 +18,7 @@ import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyH
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import AccountsStack from "./navigation/AccountsStack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import TransactionsScreen from "../presentation/screens/TransactionsScreen";
+import TransactionEditorScreen from "../presentation/screens/TransactionEditorScreen";
 
 const screens: BottomTabScreen[] = [
     {
@@ -36,7 +36,7 @@ const screens: BottomTabScreen[] = [
     {
         name: "TransactionsScreen",
         label: "Транзакції",
-        component: TransactionsScreen,
+        component: TransactionEditorScreen,
         iconName: "list-outline",
     },
     {
