@@ -4,12 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import type { IconCategory, IconItem } from "../types/icon";
-import {
-    CategoryWrapper,
-    CategoryLabel,
-    IconsGrid,
-    IconButton
-} from "../../styles/components/IconPickerStyles";
+import { CategoryLabel, CategoryWrapper, IconButton, IconsGrid } from "../../styles/components/IconPickerStyles";
 import { useTheme } from "styled-components/native";
 
 const getIconComponent = (library: IconItem["library"]) => {

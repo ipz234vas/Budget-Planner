@@ -5,13 +5,12 @@ import { Account } from "../../domain/models/Account";
 import { dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "./IconRenderer";
 import {
-    TextBlock,
-    AccountName,
     AccountBalance,
-    GoalText,
+    AccountName,
     DeadlineText,
     GoalBlock,
-    RightBlock
+    RightBlock,
+    TextBlock
 } from "../../styles/components/AccountItemStyles";
 import { useTheme } from "styled-components/native";
 import { DeleteButton, IconWrapper, ItemContainer } from "../../styles/components/ItemCommonStyles";

@@ -11,8 +11,10 @@ export function GenericList<T>({ data, renderItem, onScroll }: GenericListProps<
     return (
         <FlatList
             contentContainerStyle={{
+                marginVertical: 12,
                 paddingHorizontal: 10,
-                paddingBottom: 50
+                paddingBottom: 50,
+                gap: 12
             }}
             data={data}
             keyExtractor={(item, index) => `${index}`}

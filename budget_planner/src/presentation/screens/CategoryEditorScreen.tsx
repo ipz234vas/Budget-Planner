@@ -2,20 +2,20 @@ import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { IconColorPickerModal } from "../components/IconColorPickerModal";
-import { iconItemToDb, dbToIconItem } from "../utils/iconDbMapper";
+import { dbToIconItem, iconItemToDb } from "../utils/iconDbMapper";
 import { IconRenderer } from "../components/IconRenderer";
 import CategoryList from "../components/CategoryList";
 import { useCategoryEditorController } from "../hooks/categories/useCategoryEditorController";
 import {
+    CategoryInput,
+    ColorCircle,
+    EditIcon,
+    HeaderButton,
     HeaderContainer,
     HeaderSide,
     HeaderTitle,
-    HeaderButton,
-    Row,
-    CategoryInput,
     IconWrapper,
-    ColorCircle,
-    EditIcon,
+    Row,
 } from "../../styles/components/EditorCommonStyles";
 import { useTheme } from "styled-components/native";
 import { SubTitle, SubtitleRow } from "../../styles/components/CategoryEditorStyles";

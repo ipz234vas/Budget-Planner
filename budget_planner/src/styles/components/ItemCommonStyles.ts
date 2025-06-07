@@ -13,9 +13,8 @@ export const ItemContainer = styled.View<ItemContainerProps>`
     align-items: center;
     padding: ${({ theme }) => theme.spacing.s + 4}px ${({ theme }) => theme.spacing.m}px;
     background-color: ${({ $pressed, theme }) =>
-    $pressed ? theme.colors.background : theme.colors.secondaryBackground};
+            $pressed ? theme.colors.background : theme.colors.secondaryBackground};
     border-radius: ${({ theme }) => theme.borderRadius.m}px;
-    margin-vertical: 6px;
     elevation: ${({ $pressed }) => ($pressed ? 1 : 2)};
     transform: ${({ $pressed }) => ($pressed ? "scale(0.98)" : "scale(1)")};
 `;

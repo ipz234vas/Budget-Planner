@@ -16,9 +16,14 @@ import { ChainCurrencyService } from "../data/services/currency/ChainCurrencySer
 import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
-import AccountsTabs from "./navigation/AccountsTabs";
-import AccountEditorScreen from "../presentation/screens/AccountEditorScreen";
 import AccountsStack from "./navigation/AccountsStack";
+import { TransactionService } from "../domain/services/TransactionService";
+import { Transaction } from "../domain/models/Transaction";
+import { Account } from "../domain/models/Account";
+import { Category } from "../domain/models/Category";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import TransactionsScreen from "../presentation/screens/TransactionsScreen";
+import { TransactionType } from "../domain/enums/TransactionType";
 
 const screens: BottomTabScreen[] = [
     {
@@ -31,6 +36,12 @@ const screens: BottomTabScreen[] = [
         name: "CategoriesScreen",
         label: "Категорії",
         component: CategoriesScreenContainer,
+        iconName: "list-outline",
+    },
+    {
+        name: "TransactionsScreen",
+        label: "Транзакції",
+        component: TransactionsScreen,
         iconName: "list-outline",
     },
     {
@@ -74,6 +85,28 @@ export default function App() {
         const initFactory = async () => {
             const repositoryFactory = new RepositoryFactory(await SQLiteService.getInstance())
             setFactory(repositoryFactory);
+
+            console.log(await repositoryFactory.getRepository(Category)?.getAll())
+            console.log(await repositoryFactory.getRepository(Account)?.getAll())
+
+            const repo = repositoryFactory.getRepository(Transaction)!
+            try {
+
+
+                await repo.insert(new Transaction({
+                    amount: 20, type: TransactionType.Income, currencyCode: "UAH",
+                    date: new Date().toISOString().slice(0, 10), categoryId: 18, fromAccountId: 2, toAccountId: 4, time: new Date().toTimeString().slice(0, 8)
+                }));
+            } catch (error) {
+                console.error(error);
+            }
+            const service = new TransactionService(
+                repositoryFactory.getRepository(Transaction)!,
+                repositoryFactory.getRepository(Account)!,
+                repositoryFactory.getRepository(Category)!
+            )
+
+            console.log(await service.getAllDetails());
         };
         initFactory();
     }, []);
@@ -83,17 +116,19 @@ export default function App() {
     );
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
-                <FactoryContext.Provider value={factory}>
-                    <CurrencyProvider service={currencyService}>
-                        <ScreenContainer>
-                            <RootNavigation screens={screens}/>
-                            <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
-                        </ScreenContainer>
-                    </CurrencyProvider>
-                </FactoryContext.Provider>
-            </ThemeProvider>
-        </ThemeContext.Provider>
+        <GestureHandlerRootView>
+            <ThemeContext.Provider value={{ theme, toggleTheme }}>
+                <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
+                    <FactoryContext.Provider value={factory}>
+                        <CurrencyProvider service={currencyService}>
+                            <ScreenContainer>
+                                <RootNavigation screens={screens}/>
+                                <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
+                            </ScreenContainer>
+                        </CurrencyProvider>
+                    </FactoryContext.Provider>
+                </ThemeProvider>
+            </ThemeContext.Provider>
+        </GestureHandlerRootView>
     );
 }

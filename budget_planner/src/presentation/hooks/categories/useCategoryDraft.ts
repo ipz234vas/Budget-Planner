@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Category } from "../../../domain/models/Category";
 import { UpdateCategoryCommand } from "../../../domain/commands/UpdateCategoryCommand";
 
