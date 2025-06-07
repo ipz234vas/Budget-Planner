@@ -17,13 +17,8 @@ import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
 import AccountsStack from "./navigation/AccountsStack";
-import { TransactionService } from "../domain/services/TransactionService";
-import { Transaction } from "../domain/models/Transaction";
-import { Account } from "../domain/models/Account";
-import { Category } from "../domain/models/Category";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import TransactionsScreen from "../presentation/screens/TransactionsScreen";
-import { TransactionType } from "../domain/enums/TransactionType";
 
 const screens: BottomTabScreen[] = [
     {
@@ -85,36 +80,6 @@ export default function App() {
         const initFactory = async () => {
             const repositoryFactory = new RepositoryFactory(await SQLiteService.getInstance())
             setFactory(repositoryFactory);
-
-            console.log(await repositoryFactory.getRepository(Category)?.getAll())
-            console.log(await repositoryFactory.getRepository(Account)?.getAll())
-
-            const date = new Date();
-            date.setDate(date.getDate() + 3);
-            const dateStr = date.toISOString().slice(0, 10);
-
-            const repo = repositoryFactory.getRepository(Transaction)!
-            try {
-                await repo.insert(new Transaction({
-                    amount: 20,
-                    type: TransactionType.Income,
-                    currencyCode: "UAH",
-                    date: dateStr,
-                    categoryId: 18,
-                    fromAccountId: 2,
-                    toAccountId: 4,
-                    time: new Date().toTimeString().slice(0, 8)
-                }));
-            } catch (error) {
-                console.error(error);
-            }
-            const service = new TransactionService(
-                repositoryFactory.getRepository(Transaction)!,
-                repositoryFactory.getRepository(Account)!,
-                repositoryFactory.getRepository(Category)!
-            )
-
-            console.log(await service.getAllDetails());
         };
         initFactory();
     }, []);

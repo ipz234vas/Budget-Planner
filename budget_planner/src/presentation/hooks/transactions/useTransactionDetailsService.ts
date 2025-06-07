@@ -4,6 +4,7 @@ import { Account } from "../../../domain/models/Account";
 import { TransactionService } from "../../../domain/services/TransactionService";
 import { Transaction } from "../../../domain/models/Transaction";
 import { Category } from "../../../domain/models/Category";
+import { ITransactionRepository } from "../../../domain/interfaces/repositories/ITransactionRepository";
 
 export function useTransactionDetailsService() {
     const factory = useContext(FactoryContext);
@@ -13,7 +14,7 @@ export function useTransactionDetailsService() {
         if (!factory) {
             return;
         }
-        const transactionRepo = factory.getRepository(Transaction);
+        const transactionRepo = factory.getRepository(Transaction) as ITransactionRepository;
         const accountRepo = factory.getRepository(Account);
         const categoryRepo = factory.getRepository(Category);
 

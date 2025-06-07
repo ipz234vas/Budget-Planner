@@ -3,10 +3,10 @@ import { IRepository } from "../../domain/interfaces/repositories/IRepository";
 import { Query } from "../builders/Query";
 
 export class Repository<T extends Record<string, any>> implements IRepository<T> {
-    private readonly _sqliteService: ISQLiteService;
-    private readonly _tableName: string;
-    private readonly _primaryKey: keyof T;
-    private readonly _autoGeneratePrimaryKey: boolean;
+    protected readonly _sqliteService: ISQLiteService;
+    protected readonly _tableName: string;
+    protected readonly _primaryKey: keyof T;
+    protected readonly _autoGeneratePrimaryKey: boolean;
 
     constructor(
         tableName: string,
