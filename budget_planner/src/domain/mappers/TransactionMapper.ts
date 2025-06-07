@@ -1,108 +1,138 @@
 import { Category } from "../models/Category";
-import { CategoryInfo } from "../interfaces/models/transactions/CategoryInfo";
 import { Transaction } from "../models/Transaction";
+import { AccountType } from "../enums/AccountType";
 import { TransactionType } from "../enums/TransactionType";
-import {
-    TransactionDetails,
-} from "../interfaces/models/transactions/TransactionDetails";
+
+import { CategoryInfo } from "../interfaces/models/transactions/CategoryInfo";
+import { TransactionDetails } from "../interfaces/models/transactions/TransactionDetails";
 import { AccountInfo } from "../interfaces/models/transactions/AccountInfo";
 import { RawTransactionDetailsRow } from "../interfaces/models/transactions/RawTransactionDetailsRow";
-import { ExpenseDetails } from "../interfaces/models/transactions/ExpenseDetails";
 import { IncomeDetails } from "../interfaces/models/transactions/IncomeDetails";
+import { ExpenseDetails } from "../interfaces/models/transactions/ExpenseDetails";
 import { TransferDetails } from "../interfaces/models/transactions/TransferDetails";
 
-export const createTransactionMapper = (categories: Category[]) => {
-
+function buildCategoryInfoMap(categories: Category[]): Map<number, CategoryInfo> {
     const catMap = new Map(categories.map((c) => [c.id, c]));
-
-    const categoryInfoMap = new Map<number, CategoryInfo>();
-
-    const toInfo = (c: Category): CategoryInfo => ({
-        id: c.id,
-        name: c.name,
-        icon: c.icon,
-        color: c.color,
-        type: c.type,
-    });
+    const infoMap = new Map<number, CategoryInfo>();
 
     for (const cat of categories) {
-        if (!cat.id || categoryInfoMap.has(cat.id))
-            continue;
+        if (!cat.id || infoMap.has(cat.id)) continue;
 
         const chain: Category[] = [];
         let node: Category | undefined = cat;
-
         while (node) {
             chain.push(node);
             node = node.parentId ? catMap.get(node.parentId) : undefined;
         }
-        const rootInfo = toInfo(chain.at(-1)!); // останній елемент = root
 
-        let childInfo: CategoryInfo | undefined;
+        const rootInfo: CategoryInfo = {
+            id: chain.at(-1)!.id,
+            name: chain.at(-1)!.name,
+            icon: chain.at(-1)!.icon ?? undefined,
+            color: chain.at(-1)!.color ?? undefined,
+            type: chain.at(-1)!.type,
+        };
+
+        let child: CategoryInfo | undefined;
         for (let i = chain.length - 1; i >= 0; i--) {
-            const current = chain[i];
-            if (!current.id)
-                continue;
+            const cur = chain[i];
+            if (!cur.id) continue;
+
             const info: CategoryInfo = {
-                ...toInfo(current),
-                parent: childInfo,
+                id: cur.id,
+                name: cur.name,
+                icon: cur.icon ?? undefined,
+                color: cur.color ?? undefined,
+                type: cur.type,
+                parent: child,
                 root: rootInfo,
             };
-            categoryInfoMap.set(current.id, info);
-            childInfo = info;
+            infoMap.set(cur.id, info);
+            child = info;
         }
     }
+    return infoMap;
+}
 
-    const pickTx = (r: RawTransactionDetailsRow): Transaction => ({
-        id: r.id,
-        type: r.type,
-        amount: r.amount,
-        currencyCode: r.currencyCode,
-        rate: r.rate,
-        date: r.date,
-        time: r.time,
-        description: r.description || undefined,
-        fromAccountId: r.fromAccountId,
-        toAccountId: r.toAccountId,
-        categoryId: r.categoryId,
-    });
+function toAccountInfo(raw?: {
+    id: number | null;
+    name: string | null;
+    icon: string | null;
+    color: string | null;
+    type: AccountType | null;
+    currency: string | null;
+}): AccountInfo | undefined {
+    if (!raw?.id) return undefined;
+    return {
+        id: raw.id,
+        name: raw.name ?? "",
+        icon: raw.icon ?? undefined,
+        color: raw.color ?? undefined,
+        type: raw.type ?? AccountType.Account,
+        currencyCode: raw.currency ?? "",
+    };
+}
 
-    const pickAccount = (
-        id: number | null,
-        name: string | null,
-        icon: string | null,
-        color: string | null,
-        type: any | null
-    ): AccountInfo | undefined =>
-        id
-            ? { id, name: name!, icon: icon!, color: color!, type: type! }
-            : undefined;
+export const createTransactionMapper = (categories: Category[]) => {
+    const categoryInfoMap = buildCategoryInfoMap(categories);
 
-    return function mapToDetails(r: RawTransactionDetailsRow): TransactionDetails {
+    return (r: RawTransactionDetailsRow): TransactionDetails => {
+        const transaction: Transaction = {
+            id: r.id,
+            type: r.type,
+            amount: r.amount,
+            currencyCode: r.currencyCode,
+            rate: r.rate ?? null,
+            date: r.date,
+            time: r.time,
+            description: r.description || undefined,
+            fromAccountId: r.fromAccountId,
+            toAccountId: r.toAccountId,
+            categoryId: r.categoryId,
+        };
+
+        const fromAccount = toAccountInfo({
+            id: r.from_id,
+            name: r.from_name,
+            icon: r.from_icon,
+            color: r.from_color,
+            type: r.from_type,
+            currency: r.from_currencyCode,
+        });
+
+        const toAccount = toAccountInfo({
+            id: r.to_id,
+            name: r.to_name,
+            icon: r.to_icon,
+            color: r.to_color,
+            type: r.to_type,
+            currency: r.to_currencyCode,
+        });
+
         switch (r.type) {
             case TransactionType.Expense:
                 return {
-                    transaction: pickTx(r),
-                    category: r.categoryId ? categoryInfoMap.get(r.categoryId)! : undefined,
-                    fromAccount: pickAccount(r.from_id, r.from_name, r.from_icon, r.from_color, r.from_type),
+                    transaction,
+                    category: r.categoryId ? categoryInfoMap.get(r.categoryId) : undefined,
+                    fromAccount,
                 } as ExpenseDetails;
 
             case TransactionType.Income:
                 return {
-                    transaction: pickTx(r),
-                    category: r.categoryId ? categoryInfoMap.get(r.categoryId)! : undefined,
-                    toAccount: pickAccount(r.to_id, r.to_name, r.to_icon, r.to_color, r.to_type),
+                    transaction,
+                    category: r.categoryId ? categoryInfoMap.get(r.categoryId) : undefined,
+                    toAccount,
                 } as IncomeDetails;
 
             case TransactionType.Transfer:
                 return {
-                    transaction: pickTx(r),
-                    fromAccount: pickAccount(r.from_id, r.from_name, r.from_icon, r.from_color, r.from_type),
-                    toAccount: pickAccount(r.to_id, r.to_name, r.to_icon, r.to_color, r.to_type),
+                    transaction,
+                    fromAccount,
+                    toAccount,
                 } as TransferDetails;
 
             default:
-                throw new Error("Unreachable");
+                throw new Error("Unknown transaction type: " + r.type);
         }
     };
 };

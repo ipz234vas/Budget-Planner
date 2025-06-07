@@ -30,6 +30,7 @@ export interface RawTransactionDetailsRow {
     from_icon: string | null;
     from_color: string | null;
     from_type: AccountType | null;
+    from_currencyCode: string | null;
 
     /** ---- account “to” ---- */
     to_id: number | null;
@@ -37,4 +38,5 @@ export interface RawTransactionDetailsRow {
     to_icon: string | null;
     to_color: string | null;
     to_type: AccountType | null;
+    to_currencyCode: string | null;
 }

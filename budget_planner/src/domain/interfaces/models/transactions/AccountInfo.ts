@@ -6,4 +6,5 @@ export interface AccountInfo {
     icon?: string;
     color?: string;
     type: AccountType;
+    currencyCode: string;
 }

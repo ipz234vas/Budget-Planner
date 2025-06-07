@@ -36,16 +36,19 @@ const SQL_ALL_DETAILS: string = `
           af.icon     AS from_icon,
           af.color    AS from_color,
           af.type     AS from_type,
+          af.currencyCode AS from_currencyCode,
         
           /* ---- account "to" ---- */
           at.id       AS to_id,
           at.name     AS to_name,
           at.icon     AS to_icon,
           at.color    AS to_color,
-          at.type     AS to_type
+          at.type     AS to_type,
+          at.currencyCode AS to_currencyCode
         
         FROM transactions t
         LEFT JOIN categories c  ON c.id  = t.categoryId
         LEFT JOIN accounts  af ON af.id = t.fromAccountId
         LEFT JOIN accounts  at ON at.id = t.toAccountId
+        ORDER BY t.date, t.time DESC
 `;
