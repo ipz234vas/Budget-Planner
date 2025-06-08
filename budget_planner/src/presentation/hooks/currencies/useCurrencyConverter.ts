@@ -30,19 +30,5 @@ export function useCurrencyConverter() {
         []
     );
 
-    const getRateToBase = useCallback(
-        async (code: string, dateISO: string): Promise<number> => {
-            if (!baseCurrency || code === baseCurrency) return 1;
-
-            const [rCodeUAH, rBaseUAH] = await Promise.all([
-                converterRef.current.getRateUAH(code, dateISO),
-                converterRef.current.getRateUAH(baseCurrency, dateISO),
-            ]);
-
-            return rCodeUAH / rBaseUAH;
-        },
-        [baseCurrency]
-    );
-
-    return { convert, getRateToBase, baseCurrency, converter: converterRef.current };
+    return { convert, baseCurrency, converter: converterRef.current };
 }

@@ -1,24 +1,9 @@
 import React from "react";
 import { FlatList } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import type { IconCategory, IconItem } from "../types/icon";
 import { CategoryLabel, CategoryWrapper, IconButton, IconsGrid } from "../../styles/components/IconPickerStyles";
 import { useTheme } from "styled-components/native";
-
-const getIconComponent = (library: IconItem["library"]) => {
-    switch (library) {
-        case "Ionicons":
-            return Ionicons;
-        case "MaterialIcons":
-            return MaterialIcons;
-        case "FontAwesome":
-            return FontAwesome;
-        default:
-            return Ionicons;
-    }
-};
+import { getIconComponent } from "../utils/iconHelpers";
 
 interface IconPickerProps {
     categories: IconCategory[];
