@@ -31,13 +31,13 @@ const screens: BottomTabScreen[] = [
         name: "CategoriesScreen",
         label: "Категорії",
         component: CategoriesScreenContainer,
-        iconName: "list-outline",
+        iconName: "grid-outline",
     },
     {
         name: "TransactionsScreen",
         label: "Транзакції",
         component: TransactionsStack,
-        iconName: "list-outline",
+        iconName: "receipt-outline"
     },
     {
         name: "SettingsScreen",
