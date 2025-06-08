@@ -34,11 +34,11 @@ To launch the app locally, follow these steps:
 
 Manage your financial accounts with support for different currencies and goal tracking.
 
-![Accounts](media/gif/accounts.gif)
+![Accounts](budget_planner/media/gif/accounts.gif)
 
 **Creating a new account:**
 
-![Create Account](media/gif/create_account.gif)
+![Create Account](budget_planner/media/gif/create_account.gif)
 
 ---
 
@@ -46,11 +46,11 @@ Manage your financial accounts with support for different currencies and goal tr
 
 Categories are organized in a **tree structure**, allowing you to create an unlimited number of nested subcategories.
 
-![Categories](media/gif/categories.gif)
+![Categories](budget_planner/media/gif/categories.gif)
 
 **Creating a new category:**
 
-![Create Category](media/gif/create_category.gif)
+![Create Category](budget_planner/media/gif/create_category.gif)
 
 ---
 
@@ -58,7 +58,7 @@ Categories are organized in a **tree structure**, allowing you to create an unli
 
 Create and manage transactions between accounts or within categories. Supports income, expense and transfer types.
 
-![Transactions](media/gif/transactions.gif)
+![Transactions](budget_planner/media/gif/transactions.gif)
 
 ---
 
@@ -68,11 +68,11 @@ Customize the app to your needs:
 
 * Switch between light and dark themes:
 
-![Theme Settings](media/gif/theme_settings.gif)
+![Theme Settings](budget_planner/media/gif/theme_settings.gif)
 
 * Set a base currency, used for displaying converted amounts throughout the app:
 
-![Currency Settings](media/gif/currency_settings.gif)
+![Currency Settings](budget_planner/media/gif/currency_settings.gif)
 
 ---
 
@@ -101,7 +101,7 @@ This project follows a modular and scalable structure. The following design patt
 **Singleton** - Used to ensure that `SQLiteService` exists as a single shared instance throughout the entire
 application. This prevents multiple database connections and guarantees consistent data access.
 
-_Implementation example: [`/src/data/sqlite/SQLiteService.ts`](/src/data/sqlite/SQLiteService.ts)_
+_Implementation example: [`/src/data/sqlite/SQLiteService.ts`](budget_planner/src/data/sqlite/SQLiteService.ts)_
 
 ### 2. Factory
 
@@ -110,7 +110,7 @@ instances (e.g., for `Category`, `Account`, `Transaction`, etc.). This encapsula
 the client from concrete implementations, and adds caching for reuse.
 
 _Implementation
-example: [`/src/data/repositories/RepositoryFactory.ts`](./src/data/repositories/RepositoryFactory.ts)_
+example: [`/src/data/repositories/RepositoryFactory.ts`](budget_planner/src/data/repositories/RepositoryFactory.ts)_
 
 ### 3. Builder
 
@@ -121,7 +121,7 @@ without hardcoding strings.
     - The **Builder Pattern** allows progressive query construction (`select(...)`, `where(...)`, `orderBy(...)`).
     - The **Fluent Interface** enables method chaining with an intuitive and expressive syntax.
 
-_Implementation folder: [`/src/data/builders`](./src/data/builders)_
+_Implementation folder: [`/src/data/builders`](budget_planner/src/data/builders)_
 
 ### 4. Chain of Responsibility
 
@@ -129,7 +129,7 @@ _Implementation folder: [`/src/data/builders`](./src/data/builders)_
 via `ChainCurrencyService`. Each handler in the chain performs a specific task (e.g., fetching from API, adding
 fallback currencies) and passes the result to the next handler.
 
-_Implementation folder: [`/src/data/services/currency`](./src/data/services/currency)_
+_Implementation folder: [`/src/data/services/currency`](budget_planner/src/data/services/currency)_
 
 Components:
 
@@ -200,7 +200,7 @@ development:
     - `getTimestamp(date, time)` - converts transaction fields into a unified timestamp
     - `calculateBalanceFromTransactions(...)` - computes delta balances across snapshots
 
-   _Used in:_ [`TransactionService`](./src/domain/services/TransactionService.ts)
+   _Used in:_ [`TransactionService`](budget_planner/src/domain/services/TransactionService.ts)
 
    > Improves cohesion and keeps business logic centralized in relevant services, without bloating data models.
 3. **Extract Class / Extract Interface**  
@@ -225,4 +225,4 @@ development:
 
 ---
 
-![Lines of code](media/images/lines_of_code.png)
+![Lines of code](budget_planner/media/images/lines_of_code.png)
