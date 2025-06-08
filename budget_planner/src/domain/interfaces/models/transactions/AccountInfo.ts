@@ -1,4 +1,5 @@
 import { AccountType } from "../../../enums/AccountType";
+import { Account } from "../../../models/Account";
 
 export interface AccountInfo {
     id: number;
@@ -7,4 +8,8 @@ export interface AccountInfo {
     color?: string;
     type: AccountType;
     currencyCode: string;
+}
+
+export function getAccountInfo(account: Account): AccountInfo {
+    return { ...account } as AccountInfo;
 }

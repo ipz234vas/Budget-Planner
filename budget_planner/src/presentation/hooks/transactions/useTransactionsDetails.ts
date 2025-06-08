@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { TransactionDetails } from "../../../domain/interfaces/models/transactions/TransactionDetails";
 import { useTransactionDetailsService } from "./useTransactionDetailsService";
 import { useFocusEffect } from "@react-navigation/native";
