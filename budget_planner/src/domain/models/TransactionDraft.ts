@@ -29,5 +29,6 @@ export class TransactionDraft {
         this.toAccount = details.toAccount ?? null;
         this.dateTime = t.date && t.time ? new Date(`${t.date}T${t.time}`) : new Date();
         this.description = t.description ?? "";
+        this.useCustomRate = !!t.rate;
     }
 }

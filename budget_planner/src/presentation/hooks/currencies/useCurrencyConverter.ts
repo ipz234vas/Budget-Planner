@@ -44,5 +44,5 @@ export function useCurrencyConverter() {
         [baseCurrency]
     );
 
-    return { convert, getRateToBase, baseCurrency };
+    return { convert, getRateToBase, baseCurrency, converter: converterRef.current };
 }

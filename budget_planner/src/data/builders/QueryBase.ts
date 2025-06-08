@@ -14,33 +14,61 @@ export abstract class QueryBase<R, T> implements Executable<R> {
     }
 
     where<K extends keyof T>(column: K, condition: SqlCondition): this {
+        const { where, params } = this.buildWherePart(String(column), condition);
+        if (where) {
+            this.wheres.push(where);
+            this.params.push(...params);
+        }
+        return this;
+    }
+
+    whereOrGroup<K extends keyof T>(conditions: Array<{ column: K, condition: SqlCondition }>): this {
+        const parts = conditions.map(({ column, condition }) => this.buildWherePart(String(column), condition));
+        const where = "(" + parts.map(p => p.where).join(" OR ") + ")";
+        const params = parts.flatMap(p => p.params);
+
+        if (parts.length) {
+            this.wheres.push(where);
+            this.params.push(...params);
+        }
+        return this;
+    }
+
+    protected buildWherePart<K extends string>(
+        column: K,
+        condition: SqlCondition
+    ): { where: string; params: SQLite.SQLiteBindValue[] } {
         switch (condition.operator) {
             case "IN":
             case "NOT IN": {
-                if (condition.values.length) {
-                    const marks = condition.values.map(() => "?").join(", ");
-                    this.wheres.push(`${String(column)} ${condition.operator} (${marks})`);
-                    this.params.push(...condition.values);
-                }
-                break;
+                if (!condition.values.length) return { where: "", params: [] };
+                const marks = condition.values.map(() => "?").join(", ");
+                return {
+                    where: `${column} ${condition.operator} (${marks})`,
+                    params: condition.values,
+                };
             }
             case "BETWEEN":
             case "NOT BETWEEN": {
-                this.wheres.push(`${String(column)} ${condition.operator} ? AND ?`);
-                this.params.push(condition.from, condition.to);
-                break;
+                return {
+                    where: `${column} ${condition.operator} ? AND ?`,
+                    params: [condition.from, condition.to],
+                };
             }
             case "IS NULL":
             case "IS NOT NULL": {
-                this.wheres.push(`${String(column)} ${condition.operator}`);
-                break;
+                return {
+                    where: `${column} ${condition.operator}`,
+                    params: [],
+                };
             }
             default: {
-                this.wheres.push(`${String(column)} ${condition.operator} ?`);
-                this.params.push((condition as any).value);
+                return {
+                    where: `${column} ${condition.operator} ?`,
+                    params: [(condition as any).value],
+                };
             }
         }
-        return this;
     }
 
     protected buildWhere(): string {

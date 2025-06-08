@@ -5,11 +5,11 @@ import { TransactionsStackParamList } from "../types/TransactionsStackParamList"
 import { useTransactionsDetails } from "../hooks/transactions/useTransactionsDetails";
 import { TransactionItem } from "../components/TransactionItem";
 import { TransactionDetails } from "../../domain/interfaces/models/transactions/TransactionDetails";
-import React from "react";
-import { View, Text } from "react-native";
-import { TransactionType } from "../../domain/enums/TransactionType";
+import React, { useEffect, useState } from "react";
+import { View, Text, Alert } from "react-native";
 import { useTheme } from "styled-components/native";
-import { formatUADate } from "../utils/dateFormatter"; // наша функція групування
+import { formatUADate } from "../utils/dateFormatter";
+import { useTotalsInBaseCurrency } from "../hooks/transactions/useTotalsInBaseCurrency";
 
 type TransactionsScreenRoute = RouteProp<TransactionsStackParamList, "Transactions">;
 
@@ -27,38 +27,77 @@ export default function TransactionsScreen() {
         navigation.navigate("TransactionEditor", {});
     };
 
-    const handleDelete = async (id?: number) => {
+    const handleDelete = (id?: number) => {
         if (!id) return;
-        await deleteTransaction(id);
+
+        Alert.alert(
+            "Видалити транзакцію",
+            "Ви впевнені, що хочете видалити цю транзакцію?",
+            [
+                {
+                    text: "Скасувати",
+                    style: "cancel",
+                },
+                {
+                    text: "Видалити",
+                    style: "destructive",
+                    onPress: () => {
+                        Alert.alert(
+                            "Оновити баланс рахунку?",
+                            "Після видалення оновити баланс рахунку?",
+                            [
+                                {
+                                    text: "Зберегти баланс",
+                                    onPress: async () => {
+                                        await deleteTransaction(id, false);
+                                    },
+                                },
+                                {
+                                    text: "Оновити баланс",
+                                    onPress: async () => {
+                                        await deleteTransaction(id);
+                                    },
+                                    style: "default",
+                                },
+                            ]
+                        );
+                    },
+                },
+            ]
+        );
     };
 
-    function groupTransactionsByDate(transactions: TransactionDetails[]) {
+    const { getTotalForSection, baseCurrency } = useTotalsInBaseCurrency();
+
+    const [sections, setSections] = useState<any[]>([]);
+
+    async function groupAndCalcTotals() {
         const groups: Record<string, TransactionDetails[]> = {};
         transactions.forEach(tr => {
             const date = tr.transaction.date || "";
-            if (!groups[date])
-                groups[date] = [];
+            if (!groups[date]) groups[date] = [];
             groups[date].push(tr);
         });
 
-        return Object.entries(groups)
-            .sort(([a], [b]) => b.localeCompare(a)) // новіші дати вгорі
-            .map(([date, items]) => {
-                let total = 0;
-                for (const tr of items) {
-                    if (tr.transaction.type === TransactionType.Expense) total -= tr.transaction.amount || 0;
-                    if (tr.transaction.type === TransactionType.Income) total += tr.transaction.amount || 0;
-                }
+        const sorted = Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+
+        const result = await Promise.all(
+            sorted.map(async ([date, items]) => {
+                const total = await getTotalForSection(items);
                 return {
                     data: items,
                     date,
                     total,
-                    currency: "UAH" //temporary
+                    currency: baseCurrency,
                 };
-            });
+            })
+        );
+        setSections(result);
     }
 
-    const sections = groupTransactionsByDate(transactions);
+    useEffect(() => {
+        groupAndCalcTotals();
+    }, [transactions, getTotalForSection, baseCurrency]);
 
     const renderSectionHeader = (section: { date: string; total: number, currency: string }) => (
         <View style={{

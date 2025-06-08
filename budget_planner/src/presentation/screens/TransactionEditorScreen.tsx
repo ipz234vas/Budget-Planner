@@ -28,29 +28,23 @@ import { TransactionDraft } from "../../domain/models/TransactionDraft";
 import { Account } from "../../domain/models/Account";
 import { AccountInfo } from "../../domain/interfaces/models/transactions/AccountInfo";
 import { Transaction } from "../../domain/models/Transaction";
-import { FactoryContext } from "../../app/contexts/FactoryContext";
+import { useTransactionDetailsService } from "../hooks/transactions/useTransactionDetailsService";
 
 type EditorRoute = RouteProp<TransactionsStackParamList, "TransactionEditor">;
 
 export default function TransactionEditorScreen() {
+    const transService = useTransactionDetailsService();
     const nav = useNavigation();
     const theme = useTheme();
     const { theme: themeMode } = useContext(ThemeContext);
-    const { convert, getRateToBase, baseCurrency } = useCurrencyConverter();
-
-    // --------- Params (edit mode?) ---------
+    const { baseCurrency, converter, convert } = useCurrencyConverter();
     const { params } = useRoute<EditorRoute>();
     const details = params?.details;
 
-    // --------- Draft state ---------
-    const [draft, setDraft] = useState<TransactionDraft>(
-        () => new TransactionDraft(details)
-    );
-    // Patch function for draft updates
+    const [draft, setDraft] = useState<TransactionDraft>(() => new TransactionDraft(details));
     const patchDraft = (patch: Partial<TransactionDraft>) =>
         setDraft(prev => ({ ...prev, ...patch }));
 
-    // --------- UI state for modals ---------
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [fromAccountModalVisible, setFromAccountModalVisible] = useState(false);
     const [toAccountModalVisible, setToAccountModalVisible] = useState(false);
@@ -59,7 +53,7 @@ export default function TransactionEditorScreen() {
     const showCat = draft.type !== TransactionType.Transfer;
     const showFrom = draft.type !== TransactionType.Income;
     const showTo = draft.type !== TransactionType.Expense;
-    console.log(draft)
+
     const amountCurrency = useMemo(
         () =>
             draft.type === TransactionType.Income
@@ -68,56 +62,124 @@ export default function TransactionEditorScreen() {
         [draft.type, draft.fromAccount, draft.toAccount]
     );
 
+    const [prevBaseCurrency, setPrevBaseCurrency] = useState(baseCurrency);
+
+    const needEquivInput =
+        !!amountCurrency &&
+        !!baseCurrency &&
+        amountCurrency !== baseCurrency;
+
     useEffect(() => {
-        (async () => {
-            if (draft.amount === "" || !amountCurrency) {
-                patchDraft({ equivBase: "", toAmount: "" });
-                return;
-            }
-
-            const dayUsed =
-                draft.dateTime > new Date() ? new Date() : draft.dateTime;
-
-            if (!draft.useCustomRate) {
-                const rate = await getRateToBase(amountCurrency, dayUsed.toISOString());
-                patchDraft({
-                    rateCustom: null,
-                    equivBase: (Number(draft.amount) * rate).toFixed(2),
-                });
-            } else {
-                const amt = Number(draft.amount);
-                if (!isNaN(amt) && amt !== 0) {
-                    patchDraft({ rateCustom: Number(draft.equivBase) / amt });
+        let cancelled = false;
+        const timeout = setTimeout(() => {
+            (async () => {
+                if (!draft.amount || !amountCurrency || !baseCurrency) {
+                    patchDraft({ equivBase: "", toAmount: "", rateCustom: undefined });
+                    return;
                 }
-            }
+                const amt = Number(draft.amount);
+                const dateISO = draft.dateTime.toISOString();
+                const rAmountUAH = await converter.getRateUAH(amountCurrency, dateISO);
+                const rBaseUAH = await converter.getRateUAH(baseCurrency, dateISO);
 
-            if (
-                showTo &&
-                draft.fromAccount?.currencyCode &&
-                draft.toAccount?.currencyCode &&
-                draft.amount !== ""
-            ) {
-                const converted = await convert(
-                    Number(draft.amount),
-                    draft.fromAccount.currencyCode,
-                    draft.toAccount.currencyCode,
-                    dayUsed.toISOString(),
-                    draft.rateCustom ?? undefined
-                );
-                patchDraft({ toAmount: converted.toFixed(2) });
-            }
-        })();
+                if (!draft.useCustomRate && needEquivInput) {
+                    const rateToBase = rAmountUAH / rBaseUAH;
+                    patchDraft({
+                        equivBase: amt ? (amt * rateToBase).toFixed(2) : "",
+                        rateCustom: undefined,
+                    });
+                }
+
+                if (
+                    showTo &&
+                    draft.fromAccount?.currencyCode &&
+                    draft.toAccount?.currencyCode &&
+                    draft.amount
+                ) {
+                    let fromToUAH = draft.useCustomRate && draft.rateCustom
+                        ? draft.rateCustom
+                        : await converter.getRateUAH(
+                            draft.fromAccount.currencyCode,
+                            dateISO
+                        );
+                    let toToUAH = await converter.getRateUAH(
+                        draft.toAccount.currencyCode,
+                        dateISO
+                    );
+                    let toAmount = Number(draft.amount) * (fromToUAH / toToUAH);
+                    patchDraft({ toAmount: toAmount.toFixed(2) });
+                } else if (
+                    showTo &&
+                    draft.fromAccount?.currencyCode === draft.toAccount?.currencyCode &&
+                    draft.amount
+                ) {
+                    patchDraft({ toAmount: draft.amount });
+                }
+            })();
+        }, 200);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timeout);
+        };
     }, [
         draft.amount,
-        amountCurrency,
         draft.useCustomRate,
-        draft.equivBase,
+        draft.rateCustom,
+        amountCurrency,
+        baseCurrency,
         draft.fromAccount,
         draft.toAccount,
+        draft.type,
         draft.dateTime,
-        draft.rateCustom,
+        needEquivInput,
+        converter,
         showTo,
     ]);
+
+    useEffect(() => {
+        if (
+            draft.amount &&
+            amountCurrency &&
+            baseCurrency &&
+            amountCurrency !== baseCurrency &&
+            (!draft.equivBase || draft.equivBase === "0")
+        ) {
+            (async () => {
+                const eqv = await convert(Number(draft.amount), amountCurrency, baseCurrency, draft.dateTime.toISOString(), draft.rateCustom);
+                patchDraft({ equivBase: eqv.toFixed(2) });
+            })();
+        }
+    }, [details, amountCurrency, baseCurrency]);
+
+
+    const onEquivBaseChange = async (equivBase: string) => {
+        patchDraft({ equivBase });
+        if (
+            equivBase &&
+            draft.amount &&
+            needEquivInput &&
+            draft.useCustomRate &&
+            amountCurrency &&
+            baseCurrency
+        ) {
+            const amt = Number(draft.amount);
+            const eqv = Number(equivBase);
+            const dateISO = draft.dateTime.toISOString();
+            const rBaseUAH = await converter.getRateUAH(baseCurrency, dateISO);
+            const customRate = amt !== 0 ? (eqv / amt) * rBaseUAH : undefined;
+            console.log(customRate)
+            patchDraft({ rateCustom: customRate });
+        }
+    };
+
+    const onCustomRateToggle = (useCustomRate: boolean) => {
+        if (!useCustomRate) {
+            patchDraft({ useCustomRate: false, rateCustom: undefined });
+        } else {
+            patchDraft({ useCustomRate: true });
+        }
+    };
 
     const typeItems = [
         { label: "Витрата", value: TransactionType.Expense },
@@ -129,13 +191,12 @@ export default function TransactionEditorScreen() {
     const fmtTime = (d: Date) =>
         d.toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" });
 
-    const factory = useContext(FactoryContext);
     const onSave = async () => {
         try {
             const rate =
                 draft.rateCustom ??
                 (amountCurrency
-                    ? await getRateToBase(amountCurrency, draft.dateTime.toISOString())
+                    ? await converter.getRateUAH(amountCurrency, draft.dateTime.toISOString())
                     : 1);
 
             const trans = new Transaction({
@@ -152,25 +213,14 @@ export default function TransactionEditorScreen() {
                 description: draft.description,
             });
 
-            const tRepo = factory?.getRepository(Transaction);
-            const aRepo = factory?.getRepository(Account);
             if (!trans.id)
-                await tRepo?.insert(trans)
-            else await tRepo?.update(trans);
-            const from = await aRepo?.getById(trans.fromAccountId!);
-            if (from && trans.amount) {
-                from.currentAmount -= trans.amount;
-                await aRepo?.update(from)
-            }
-            const to = await aRepo?.getById(trans.toAccountId!);
-            if (to && trans.amount) {
-                to.currentAmount += trans.amount;
-                await aRepo?.update(to)
-            }
+                await transService?.createTransaction(trans);
+            else
+                await transService?.updateTransaction(trans.id, trans);
 
             nav.goBack();
         } catch (err) {
-            console.error(err)
+            console.error(err);
         }
     };
 
@@ -255,24 +305,25 @@ export default function TransactionEditorScreen() {
                         <EditorInput
                             keyboardType="numeric"
                             value={draft.amount}
-                            onChangeText={(amount) => patchDraft({ amount })}
+                            onChangeText={amount => patchDraft({ amount })}
                             placeholder="0"
                             placeholderTextColor={theme.colors.textSecondary}
                         />
                     </View>
 
-                    {amountCurrency && amountCurrency !== baseCurrency && (
+                    {/* Додатковий інпут: еквівалент (якщо валюти різні) */}
+                    {needEquivInput && (
                         <>
                             <EditorLabel>≈ У {baseCurrency}</EditorLabel>
                             <EditorInput
                                 keyboardType="numeric"
-                                editable={draft.useCustomRate}
                                 value={draft.equivBase}
-                                onChangeText={(equivBase) => patchDraft({ equivBase })}
+                                editable={draft.useCustomRate}
+                                onChangeText={onEquivBaseChange}
                                 placeholder="0"
                                 placeholderTextColor={theme.colors.textSecondary}
                             />
-                            <View style={{ flexDirection: "row" }}>
+                            <View style={{ flexDirection: "row", alignItems: "center" }}>
                                 <Switch
                                     thumbColor={theme.colors.secondaryBackground}
                                     trackColor={{
@@ -280,9 +331,7 @@ export default function TransactionEditorScreen() {
                                         true: theme.colors.textSecondary,
                                     }}
                                     value={draft.useCustomRate}
-                                    onValueChange={(useCustomRate) =>
-                                        patchDraft({ useCustomRate })
-                                    }
+                                    onValueChange={onCustomRateToggle}
                                 />
                                 <EditorLabel style={{ marginLeft: theme.spacing.xs }}>
                                     Власний курс
@@ -291,6 +340,7 @@ export default function TransactionEditorScreen() {
                         </>
                     )}
 
+                    {/* Transfer: "Сума, що надходить" */}
                     {showTo &&
                         draft.fromAccount?.currencyCode &&
                         draft.toAccount?.currencyCode &&
@@ -321,7 +371,7 @@ export default function TransactionEditorScreen() {
                         <EditorLabel>Опис</EditorLabel>
                         <EditorInput
                             value={draft.description}
-                            onChangeText={(description) => patchDraft({ description })}
+                            onChangeText={description => patchDraft({ description })}
                             placeholder="Коментар"
                             multiline
                             style={{ height: 80 }}

@@ -8,7 +8,7 @@ export class CurrencyConverter {
     }
 
     async getRateUAH(code: string, dateISO: string) {
-        return this.rates.getRateToUAH(code, dateISO);
+        return this.rates.getRateToUAH(code, this.getSafeDateISO(dateISO));
     }
 
     async convert(
@@ -22,14 +22,28 @@ export class CurrencyConverter {
             return amount;
         }
 
+        const safeDateISO = this.getSafeDateISO(dateISO)
+
         let rFrom;
         if (customRate) {
             rFrom = customRate;
         } else {
-            rFrom = await this.rates.getRateToUAH(from, dateISO);
+            rFrom = await this.rates.getRateToUAH(from, safeDateISO);
         }
 
-        const rTo = await this.rates.getRateToUAH(to, dateISO);
+        const rTo = await this.rates.getRateToUAH(to, safeDateISO);
         return amount * (rFrom / rTo);
+    }
+
+    private getSafeDateISO(dateISO: string): string {
+        const today = new Date();
+        const inputDate = new Date(dateISO);
+
+        let safeDateISO = dateISO;
+        if (inputDate > today) {
+            safeDateISO = today.toISOString().slice(0, 10);
+        }
+
+        return safeDateISO
     }
 }

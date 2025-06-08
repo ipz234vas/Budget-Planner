@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { TransactionDetails } from "../../../domain/interfaces/models/transactions/TransactionDetails";
 import { useTransactionDetailsService } from "./useTransactionDetailsService";
+import { useFocusEffect } from "@react-navigation/native";
 
 export function useTransactionsDetails() {
     const [transactions, setTransactions] = useState<TransactionDetails[]>([]);
@@ -18,16 +19,17 @@ export function useTransactionsDetails() {
         setLoading(false);
     }, [service]);
 
-    useEffect(() => {
-        loadTransactions();
-    }, [loadTransactions]);
+    useFocusEffect(
+        useCallback(() => {
+            loadTransactions();
+        }, [loadTransactions])
+    );
 
-
-    const deleteTransaction = useCallback(async (id: number) => {
+    const deleteTransaction = useCallback(async (id: number, updateBalance: boolean = true) => {
         if (!service) {
             return;
         }
-        await service.deleteTransaction(id);
+        await service.deleteTransaction(id, updateBalance);
         setTransactions(prevState => prevState.filter(value => value.transaction.id !== id));
     }, [service, loadTransactions]);
 
