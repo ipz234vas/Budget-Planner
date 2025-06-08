@@ -146,7 +146,7 @@ export default function TransactionEditorScreen() {
             (!draft.equivBase || draft.equivBase === "0")
         ) {
             (async () => {
-                const eqv = await convert(Number(draft.amount), amountCurrency, baseCurrency, draft.dateTime.toISOString(), draft.rateCustom);
+                const eqv = await convert(Number(draft.amount), amountCurrency, baseCurrency, draft.dateTime.toISOString(), draft.rateCustom ?? undefined);
                 patchDraft({ equivBase: eqv.toFixed(2) });
             })();
         }
