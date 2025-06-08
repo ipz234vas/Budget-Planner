@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { AccountType } from "../../../domain/enums/AccountType";
 import { Account } from "../../../domain/models/Account";

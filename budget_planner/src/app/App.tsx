@@ -16,9 +16,9 @@ import { ChainCurrencyService } from "../data/services/currency/ChainCurrencySer
 import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
-import AccountsTabs from "./navigation/AccountsTabs";
-import AccountEditorScreen from "../presentation/screens/AccountEditorScreen";
 import AccountsStack from "./navigation/AccountsStack";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import TransactionsStack from "./navigation/TransactionsStack";
 
 const screens: BottomTabScreen[] = [
     {
@@ -31,6 +31,12 @@ const screens: BottomTabScreen[] = [
         name: "CategoriesScreen",
         label: "Категорії",
         component: CategoriesScreenContainer,
+        iconName: "list-outline",
+    },
+    {
+        name: "TransactionsScreen",
+        label: "Транзакції",
+        component: TransactionsStack,
         iconName: "list-outline",
     },
     {
@@ -83,17 +89,19 @@ export default function App() {
     );
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
-                <FactoryContext.Provider value={factory}>
-                    <CurrencyProvider service={currencyService}>
-                        <ScreenContainer>
-                            <RootNavigation screens={screens}/>
-                            <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
-                        </ScreenContainer>
-                    </CurrencyProvider>
-                </FactoryContext.Provider>
-            </ThemeProvider>
-        </ThemeContext.Provider>
+        <GestureHandlerRootView>
+            <ThemeContext.Provider value={{ theme, toggleTheme }}>
+                <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
+                    <FactoryContext.Provider value={factory}>
+                        <CurrencyProvider service={currencyService}>
+                            <ScreenContainer>
+                                <RootNavigation screens={screens}/>
+                                <StatusBar style={theme === 'dark' ? 'light' : 'dark'}/>
+                            </ScreenContainer>
+                        </CurrencyProvider>
+                    </FactoryContext.Provider>
+                </ThemeProvider>
+            </ThemeContext.Provider>
+        </GestureHandlerRootView>
     );
 }

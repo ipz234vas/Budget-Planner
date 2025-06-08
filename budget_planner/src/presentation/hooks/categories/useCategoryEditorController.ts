@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { Category } from "../../../domain/models/Category";
 import { useCategorySession } from "../../contexts/CategorySessionContext";

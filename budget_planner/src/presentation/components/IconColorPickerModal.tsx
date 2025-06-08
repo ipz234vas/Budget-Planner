@@ -7,13 +7,13 @@ import { IconItem } from "../types/icon";
 import { ColorWheel } from "./ColorWheel";
 import { IconRenderer } from "./IconRenderer";
 import {
-    ModalContainer,
-    Header,
-    Title,
-    IconBtn,
-    PreviewBlock,
-    IconPreviewCircle,
     BottomContent,
+    Header,
+    IconBtn,
+    IconPreviewCircle,
+    ModalContainer,
+    PreviewBlock,
+    Title,
     WheelWrapper
 } from "../../styles/components/IconColorPickerModalStyles";
 import { useTheme } from "styled-components/native";

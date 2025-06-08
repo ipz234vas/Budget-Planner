@@ -4,9 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Category } from "../../domain/models/Category";
 import { dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "./IconRenderer";
-import {
-    CategoryName,
-} from "../../styles/components/CategoryItemStyles";
+import { CategoryName, } from "../../styles/components/CategoryItemStyles";
 import { useTheme } from "styled-components/native";
 import { DeleteButton, IconWrapper, ItemContainer } from "../../styles/components/ItemCommonStyles";
 

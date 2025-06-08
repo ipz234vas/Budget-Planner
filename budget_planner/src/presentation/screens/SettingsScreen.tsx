@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext } from "react";
 import { Container, Label, Row, ThemeButton, ThemeButtonText } from "../../styles/components/SettingsStyles";
 import { ThemeContext } from "../../app/contexts/ThemeContext";
 import { useCurrencyContext } from "../../app/contexts/CurrencyContext";

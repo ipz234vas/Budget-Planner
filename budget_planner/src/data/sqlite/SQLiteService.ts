@@ -24,6 +24,16 @@ export class SQLiteService implements ISQLiteService {
         return SQLiteService.instance;
     }
 
+    public async resetDatabase(): Promise<void> {
+        if (this.db) {
+            await this.db.closeAsync();
+        }
+
+        await SQLite.deleteDatabaseAsync(DATABASE_NAME);
+
+        await this.init();
+    }
+
     private async init() {
         this.db = await SQLite.openDatabaseAsync(DATABASE_NAME);
 
@@ -61,6 +71,25 @@ export class SQLiteService implements ISQLiteService {
           amount REAL NOT NULL,
           date TEXT NOT NULL,
           UNIQUE(targetType, targetId, date)
+        );
+        
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY,
+            type TEXT NOT NULL CHECK(type IN ('expense', 'income', 'transfer')),
+            amount REAL NOT NULL CHECK(amount > 0),
+            currencyCode TEXT NOT NULL,
+            rate REAL, 
+            date TEXT NOT NULL,
+            time TEXT NOT NULL,
+            description TEXT,
+        
+            fromAccountId INTEGER,
+            toAccountId INTEGER,
+            categoryId INTEGER,
+        
+            FOREIGN KEY (fromAccountId) REFERENCES accounts(id) ON DELETE SET NULL,
+            FOREIGN KEY (toAccountId) REFERENCES accounts(id) ON DELETE SET NULL,
+            FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE SET NULL
         );
       `);
     }

@@ -1,8 +1,7 @@
 import React from "react";
-import { Dropdown } from "react-native-element-dropdown";
-import { useTheme } from "styled-components/native";
 import { ThemeButtonText } from "../../styles/components/SettingsStyles";
 import { DropdownItem } from "./DropdownItem";
+import { UniversalDropdown } from "./UniversalDropdown"; // шлях підкоригуй під себе
 
 export interface CurrencyItem {
     label: string;
@@ -24,65 +23,21 @@ export const CurrencyDropdown: React.FC<CurrencyDropdownProps> = ({
                                                                       loading = false,
                                                                       label = "Оберіть валюту"
                                                                   }) => {
-    const theme = useTheme();
-
     if (loading) return <ThemeButtonText>Завантаження…</ThemeButtonText>;
 
     return (
-        <Dropdown
-            data={data}
-            search
-            autoScroll={false}
+        <UniversalDropdown<CurrencyItem>
             value={value}
+            onChange={(item) => onChange(item.value)}
+            data={data}
             labelField="label"
             valueField="value"
             placeholder={label}
+            search={true}
             searchPlaceholder="Пошук..."
-            onChange={(item: CurrencyItem) => onChange(item.value)}
-            inputSearchStyle={{
-                color: theme.colors.textSecondary,
-                fontSize: theme.fontSizes.m,
-                backgroundColor: theme.colors.secondaryBackground,
-                borderRadius: theme.borderRadius.s,
-                paddingHorizontal: theme.spacing.s,
-                borderColor: theme.colors.border,
-            }}
-            style={{
-                width: "100%",
-                borderColor: theme.colors.border,
-                borderWidth: 1,
-                borderRadius: theme.borderRadius.s,
-                paddingHorizontal: theme.spacing.s,
-                paddingVertical: theme.spacing.m,
-                backgroundColor: theme.colors.secondaryBackground,
-            }}
-            selectedTextStyle={{
-                fontSize: theme.fontSizes.m,
-                color: theme.colors.textPrimary,
-            }}
-            placeholderStyle={{
-                fontSize: theme.fontSizes.m,
-                color: theme.colors.textSecondary,
-            }}
-            iconStyle={{
-                width: 20,
-                height: 20,
-                tintColor: theme.colors.textSecondary,
-            }}
-            containerStyle={{
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.background,
-                borderRadius: theme.borderRadius.s,
-            }}
-            itemTextStyle={{
-                fontSize: theme.fontSizes.m,
-                color: theme.colors.textPrimary,
-            }}
-            dropdownPosition="bottom"
             renderItem={(item, selected) => (
                 <DropdownItem item={item} selected={!!selected}/>
             )}
-            showsVerticalScrollIndicator
         />
     );
 };
