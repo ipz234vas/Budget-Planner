@@ -16,12 +16,17 @@ export class AccountService {
         return this.accountRepository.getById(id);
     }
 
-    async getByType(type: string): Promise<Account[]> {
-        return this.accountRepository
+    async getByType(type: string, excludeId?: number | null): Promise<Account[]> {
+        let query = this.accountRepository
             .query()
             .select()
-            .where("type", { operator: "=", value: type })
-            .executeAsync();
+            .where("type", { operator: "=", value: type });
+
+        if (excludeId != null) {
+            query = query.where("id", { operator: "!=", value: excludeId });
+        }
+
+        return query.executeAsync();
     }
 
     async save(account: Account, originalAmount?: number | null): Promise<number | undefined> {

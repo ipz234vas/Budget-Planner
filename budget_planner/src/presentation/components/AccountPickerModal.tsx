@@ -1,15 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { AccountType } from "../../domain/enums/AccountType";
+import { Account } from "../../domain/models/Account";
 import { FlatList, Modal, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FactoryContext } from "../../app/contexts/FactoryContext";
-import { Account } from "../../domain/models/Account";
-import { AccountType } from "../../domain/enums/AccountType";
-import { dbToIconItem } from "../utils/iconDbMapper";
-import { IconRenderer } from "./IconRenderer";
+import { useAccountsByType } from "../hooks/accounts/useAccountsByType";
 import {
-    Center, CloseBtn, CloseText, ConfirmBtn, ConfirmRow, ConfirmText, IconWrap, Loading,
-    Overlay, SelectedText, Sheet, TabButton, Tabs, TabText, Tile, TileAmount, TileLabel
+    Center, ConfirmBtn, ConfirmRow, ConfirmText, Loading, Overlay, SelectedText, Sheet
 } from "../../styles/components/TransactionPickerModalStyles";
+import { AccountTile } from "./AccountTile";
+import { AccountPickerTabs } from "./AccountPickerTabs";
 
 interface Props {
     visible: boolean;
@@ -29,96 +28,37 @@ export default function AccountPickerModal({
                                                excludeId = null,
                                                initialType = AccountType.Account,
                                            }: Props) {
-    const factory = useContext(FactoryContext);
-    const repo = factory?.getRepository(Account);
-
     const [type, setType] = useState<AccountType>(initialType);
-    const [accounts, setAccounts] = useState<Account[]>([]);
     const [selected, setSelected] = useState<Account | null>(null);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        if (!visible) {
-            return;
-        }
-        setSelected(null);
-        setType(initialType);
-    }, [visible, initialType]);
-
-    useEffect(() => {
-        if (!visible) {
-            return;
-        }
-        let active = true;
-        (async () => {
-            setLoading(true);
-            let q = repo?.query().select().where("type", { operator: "=", value: type });
-            if (excludeId) {
-                q = q?.where("id", { operator: "!=", value: excludeId });
-            }
-            const list = (await q?.executeAsync()) ?? [];
-            if (active) {
-                setAccounts(list);
-            }
-            setLoading(false);
-        })();
-        return () => {
-            active = false;
-        }
-    }, [repo, type, excludeId, visible]);
-
     const { height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
+    const { accounts, loading } = useAccountsByType(type, excludeId, visible);
+
+    useEffect(() => {
+        if (visible) {
+            setSelected(null);
+            setType(initialType);
+        }
+    }, [visible, initialType]);
 
     return (
-        <Modal
-            visible={visible}
-            transparent
-            animationType="slide"
-            onRequestClose={onClose}
-        >
+        <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
             <Overlay>
                 <Sheet style={{ maxHeight: height * 0.75, paddingBottom: insets.bottom + 8 }}>
-                    <Tabs>
-                        <TabButton
-                            $active={type === AccountType.Account}
-                            onPress={() => setType(AccountType.Account)}
-                        >
-                            <TabText $active={type === AccountType.Account}>Рахунки</TabText>
-                        </TabButton>
-                        <TabButton
-                            $active={type === AccountType.Saving}
-                            onPress={() => setType(AccountType.Saving)}
-                        >
-                            <TabText $active={type === AccountType.Saving}>Банки</TabText>
-                        </TabButton>
-                        <CloseBtn onPress={onClose}>
-                            <CloseText>✕</CloseText>
-                        </CloseBtn>
-                    </Tabs>
+                    <AccountPickerTabs type={type} onChangeType={setType} onClose={onClose}/>
 
                     {loading ? (
-                        <Center>
-                            <Loading size="large"/>
-                        </Center>
+                        <Center><Loading size="large"/></Center>
                     ) : (
                         <FlatList
                             data={accounts}
                             keyExtractor={item => item.id?.toString() ?? ""}
                             renderItem={({ item }) => (
-                                <Tile
-                                    $selected={selected?.id === item.id}
+                                <AccountTile
+                                    account={item}
+                                    selected={selected?.id === item.id}
                                     onPress={() => setSelected(item)}
-                                    android_ripple={{ color: "#0002", borderless: false }}
-                                >
-                                    <IconWrap $bgColor={item.color ?? "#999"}>
-                                        <IconRenderer icon={dbToIconItem(item.icon)} size={26} color="#fff"/>
-                                    </IconWrap>
-                                    <TileLabel numberOfLines={1}>{item.name}</TileLabel>
-                                    <TileAmount>
-                                        {item.currentAmount} {item.currencyCode}
-                                    </TileAmount>
-                                </Tile>
+                                />
                             )}
                             contentContainerStyle={{ paddingBottom: 16, paddingTop: 4 }}
                         />
