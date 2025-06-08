@@ -26,6 +26,8 @@ To launch the app locally, follow these steps:
     * **Expo Go** (scan the QR code), or
     * a simulator/emulator (e.g., Android Studio or Xcode)
 
+   > 📦 Or you can [download the APK](budget_planner/app-release.apk) to try the app on any Android device.
+
 ---
 
 ## Features Overview
