@@ -168,7 +168,6 @@ export default function TransactionEditorScreen() {
             const dateISO = draft.dateTime.toISOString();
             const rBaseUAH = await converter.getRateUAH(baseCurrency, dateISO);
             const customRate = amt !== 0 ? (eqv / amt) * rBaseUAH : undefined;
-            console.log(customRate)
             patchDraft({ rateCustom: customRate });
         }
     };
@@ -208,8 +207,12 @@ export default function TransactionEditorScreen() {
                 categoryId: draft.category?.id,
                 fromAccountId: draft.fromAccount?.id,
                 toAccountId: draft.toAccount?.id,
-                date: draft.dateTime.toISOString().slice(0, 10),
-                time: draft.dateTime.toISOString().slice(11, 19),
+                date: draft.dateTime.getFullYear() + "-" +
+                    String(draft.dateTime.getMonth() + 1).padStart(2, "0") + "-" +
+                    String(draft.dateTime.getDate()).padStart(2, "0"),
+                time: draft.dateTime.getHours().toString().padStart(2, "0") + ":" +
+                    draft.dateTime.getMinutes().toString().padStart(2, "0") + ":" +
+                    draft.dateTime.getSeconds().toString().padStart(2, "0"),
                 description: draft.description,
             });
 

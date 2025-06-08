@@ -16,7 +16,7 @@ export function useTotalsInBaseCurrency() {
                 const tx = tr.transaction;
                 let sum = Number(tx.amount) || 0;
 
-                if (tx.currencyCode !== baseCurrency) {
+                if (tx.currencyCode && baseCurrency && tx.date && tx.rate && tx.currencyCode !== baseCurrency) {
                     sum = await converter.convert(
                         sum,
                         tx.currencyCode,
@@ -26,8 +26,12 @@ export function useTotalsInBaseCurrency() {
                     );
                 }
 
-                if (tx.type === TransactionType.Expense) total -= sum;
-                if (tx.type === TransactionType.Income) total += sum;
+                if (tx.type === TransactionType.Expense) {
+                    total -= sum;
+                }
+                if (tx.type === TransactionType.Income) {
+                    total += sum;
+                }
             }
             return total;
         },

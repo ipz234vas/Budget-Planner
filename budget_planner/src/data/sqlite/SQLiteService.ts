@@ -24,7 +24,7 @@ export class SQLiteService implements ISQLiteService {
         return SQLiteService.instance;
     }
 
-    public async dropDatabase(): Promise<void> {
+    public async resetDatabase(): Promise<void> {
         if (this.db) {
             await this.db.closeAsync();
         }
@@ -33,7 +33,6 @@ export class SQLiteService implements ISQLiteService {
 
         await this.init();
     }
-
 
     private async init() {
         this.db = await SQLite.openDatabaseAsync(DATABASE_NAME);

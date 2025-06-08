@@ -1,7 +1,9 @@
 export function formatUADate(iso: string | null): string {
-    if (!iso) return "";
+    if (!iso)
+        return "";
     const date = new Date(iso);
-    if (isNaN(date.getTime())) return "";
+    if (isNaN(date.getTime()))
+        return "";
 
     const now = new Date();
     const isCurrentYear = date.getFullYear() === now.getFullYear();
