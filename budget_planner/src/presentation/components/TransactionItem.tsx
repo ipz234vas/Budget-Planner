@@ -1,63 +1,19 @@
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
-import styled, { useTheme } from "styled-components/native";
+import { useTheme } from "styled-components/native";
 
 import { TransactionDetails } from "../../domain/interfaces/models/transactions/TransactionDetails";
 import { TransactionType } from "../../domain/enums/TransactionType";
 import { IconRenderer } from "./IconRenderer";
 import { dbToIconItem } from "../utils/iconDbMapper";
 import { ItemContainer, IconWrapper } from "../../styles/components/ItemCommonStyles";
-
-const LabelBlock = styled.View`
-    flex: 1;
-    margin-left: ${({ theme }) => theme.spacing.m}px;
-    justify-content: center;
-`;
-
-const CategoryLabel = styled.Text`
-    color: ${({ theme }) => theme.colors.textPrimary};
-    font-size: ${({ theme }) => theme.fontSizes.m}px;
-    font-weight: 600;
-`;
-
-const AccountLabel = styled.Text<{ color?: string }>`
-    color: ${({ color, theme }) => color ?? theme.colors.textSecondary};
-    font-size: ${({ theme }) => theme.fontSizes.s}px;
-    margin: 1px 0 0 2px;
-`;
-
-const AmountText = styled.Text<{ $color: string }>`
-    color: ${({ $color }) => $color};
-    font-weight: 700;
-    font-size: ${({ theme }) => theme.fontSizes.m}px;
-    text-align: right;
-`;
-
-const TimeText = styled.Text`
-    color: ${({ theme }) => theme.colors.textSecondary};
-    font-size: ${({ theme }) => theme.fontSizes.s}px;
-    text-align: right;
-    margin-top: 2px;
-`;
-
-const IconContainer = styled.View`
-    position: relative;
-    justify-content: center;
-    align-items: center;
-`;
-
-const ChildIcon = styled.View<{ $bgColor: string }>`
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 20px;
-    height: 20px;
-    background-color: ${({ $bgColor }) => $bgColor};
-    border-radius: 8px;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid ${({ theme }) => theme.colors.background};
-`;
+import {
+    AccountLabel, AmountText,
+    CategoryLabel,
+    ChildIcon,
+    IconContainer,
+    LabelBlock, TimeText
+} from "../../styles/components/TransactionItemStyles";
 
 const rootAndChild = (details: TransactionDetails) => {
     if (!details.category)
@@ -184,7 +140,6 @@ export const TransactionItem: React.FC<Props> = ({
             onLongPress={onLongPress}
         >
             <ItemContainer $pressed={pressed}>
-                {/* icons */}
                 <IconContainer>
                     <IconWrapper $bgColor={vm.mainIcon.color ?? "#999"}>
                         <IconRenderer icon={dbToIconItem(vm.mainIcon.icon)} size={24}/>
@@ -218,7 +173,6 @@ export const TransactionItem: React.FC<Props> = ({
                     )}
                 </LabelBlock>
 
-                {/* amount & time */}
                 <View style={{ minWidth: 70, alignItems: "flex-end" }}>
                     <AmountText $color={vm.amountColor}>
                         {vm.amountPrefix}
