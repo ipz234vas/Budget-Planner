@@ -1,4 +1,3 @@
-import { createTransactionMapper } from "../mappers/TransactionMapper";
 import { IRepository } from "../interfaces/repositories/IRepository";
 import { Account } from "../models/Account";
 import { Category } from "../models/Category";
@@ -9,6 +8,7 @@ import { TransactionType } from "../enums/TransactionType";
 import { SnapshotTargetType } from "../enums/SnapshotTargetType";
 import { Transaction } from "../models/Transaction";
 import { CurrencyConverter } from "../../data/services/currency/CurrencyConverter";
+import { createTransactionMapper } from "../mappers/createTransactionMapper";
 
 export class TransactionService {
     constructor(
