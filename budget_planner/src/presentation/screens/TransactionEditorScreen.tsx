@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useState } from "react";
 import { ScrollView, Switch, TouchableOpacity, View } from "react-native";
 import { useTheme } from "styled-components/native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -24,16 +24,18 @@ import { DropdownItem } from "../components/DropdownItem";
 import { CategoryType } from "../../domain/enums/CategoryType";
 import { AccountType } from "../../domain/enums/AccountType";
 import { TransactionsStackParamList } from "../types/TransactionsStackParamList";
-import { TransactionDraft } from "../../domain/models/TransactionDraft";
-import { Account } from "../../domain/models/Account";
-import { AccountInfo } from "../../domain/interfaces/models/transactions/AccountInfo";
-import { Transaction } from "../../domain/models/Transaction";
-import { useTransactionDetailsService } from "../hooks/transactions/useTransactionDetailsService";
+import { getAccountInfo } from "../../domain/interfaces/models/transactions/AccountInfo";
+import { useTransactionDraft } from "../hooks/transactions/useTransactionDraft";
+import { useTransactionComputedFields } from "../hooks/transactions/useTransactionComputedFields";
+import { useTransactionRatesEffect } from "../hooks/transactions/useTransactionRatesEffectProps";
+import { useEquivBaseEffect } from "../hooks/transactions/useEquivBaseEffect";
+import { useCustomRateHandlers } from "../hooks/transactions/useCustomRateHandlers";
+import { useTransactionSaver } from "../hooks/transactions/useTransactionSaver";
+import { fmtDate, fmtTime, typeItems } from "../utils/transactionFormatter";
 
 type EditorRoute = RouteProp<TransactionsStackParamList, "TransactionEditor">;
 
 export default function TransactionEditorScreen() {
-    const transService = useTransactionDetailsService();
     const nav = useNavigation();
     const theme = useTheme();
     const { theme: themeMode } = useContext(ThemeContext);
@@ -41,191 +43,41 @@ export default function TransactionEditorScreen() {
     const { params } = useRoute<EditorRoute>();
     const details = params?.details;
 
-    const [draft, setDraft] = useState<TransactionDraft>(() => new TransactionDraft(details));
-    const patchDraft = (patch: Partial<TransactionDraft>) =>
-        setDraft(prev => ({ ...prev, ...patch }));
-
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [fromAccountModalVisible, setFromAccountModalVisible] = useState(false);
     const [toAccountModalVisible, setToAccountModalVisible] = useState(false);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
 
-    const showCat = draft.type !== TransactionType.Transfer;
-    const showFrom = draft.type !== TransactionType.Income;
-    const showTo = draft.type !== TransactionType.Expense;
+    const { draft, patchDraft } = useTransactionDraft(details);
 
-    const amountCurrency = useMemo(
-        () =>
-            draft.type === TransactionType.Income
-                ? draft.toAccount?.currencyCode
-                : draft.fromAccount?.currencyCode,
-        [draft.type, draft.fromAccount, draft.toAccount]
-    );
+    const {
+        showCat, showFrom, showTo, amountCurrency, needEquivInput,
+    } = useTransactionComputedFields(draft, baseCurrency);
 
-    const [prevBaseCurrency, setPrevBaseCurrency] = useState(baseCurrency);
+    useTransactionRatesEffect({
+        draft, baseCurrency, amountCurrency, converter, patchDraft, showTo, needEquivInput,
+    });
 
-    const needEquivInput =
-        !!amountCurrency &&
-        !!baseCurrency &&
-        amountCurrency !== baseCurrency;
+    useEquivBaseEffect({
+        details, draft, baseCurrency, amountCurrency, convert, patchDraft,
+    });
 
-    useEffect(() => {
-        let cancelled = false;
-        const timeout = setTimeout(() => {
-            (async () => {
-                if (!draft.amount || !amountCurrency || !baseCurrency) {
-                    patchDraft({ equivBase: "", toAmount: "", rateCustom: undefined });
-                    return;
-                }
-                const amt = Number(draft.amount);
-                const dateISO = draft.dateTime.toISOString();
-                const rAmountUAH = await converter.getRateUAH(amountCurrency, dateISO);
-                const rBaseUAH = await converter.getRateUAH(baseCurrency, dateISO);
-
-                if (!draft.useCustomRate && needEquivInput) {
-                    const rateToBase = rAmountUAH / rBaseUAH;
-                    patchDraft({
-                        equivBase: amt ? (amt * rateToBase).toFixed(2) : "",
-                        rateCustom: undefined,
-                    });
-                }
-
-                if (
-                    showTo &&
-                    draft.fromAccount?.currencyCode &&
-                    draft.toAccount?.currencyCode &&
-                    draft.amount
-                ) {
-                    let fromToUAH = draft.useCustomRate && draft.rateCustom
-                        ? draft.rateCustom
-                        : await converter.getRateUAH(
-                            draft.fromAccount.currencyCode,
-                            dateISO
-                        );
-                    let toToUAH = await converter.getRateUAH(
-                        draft.toAccount.currencyCode,
-                        dateISO
-                    );
-                    let toAmount = Number(draft.amount) * (fromToUAH / toToUAH);
-                    patchDraft({ toAmount: toAmount.toFixed(2) });
-                } else if (
-                    showTo &&
-                    draft.fromAccount?.currencyCode === draft.toAccount?.currencyCode &&
-                    draft.amount
-                ) {
-                    patchDraft({ toAmount: draft.amount });
-                }
-            })();
-        }, 200);
-
-        return () => {
-            cancelled = true;
-            clearTimeout(timeout);
-        };
-    }, [
-        draft.amount,
-        draft.useCustomRate,
-        draft.rateCustom,
+    const { onEquivBaseChange, onCustomRateToggle } = useCustomRateHandlers({
+        draft,
         amountCurrency,
         baseCurrency,
-        draft.fromAccount,
-        draft.toAccount,
-        draft.type,
-        draft.dateTime,
         needEquivInput,
         converter,
-        showTo,
-    ]);
+        patchDraft,
+    });
 
-    useEffect(() => {
-        if (
-            draft.amount &&
-            amountCurrency &&
-            baseCurrency &&
-            amountCurrency !== baseCurrency &&
-            (!draft.equivBase || draft.equivBase === "0")
-        ) {
-            (async () => {
-                const eqv = await convert(Number(draft.amount), amountCurrency, baseCurrency, draft.dateTime.toISOString(), draft.rateCustom ?? undefined);
-                patchDraft({ equivBase: eqv.toFixed(2) });
-            })();
-        }
-    }, [details, amountCurrency, baseCurrency]);
-
-
-    const onEquivBaseChange = async (equivBase: string) => {
-        patchDraft({ equivBase });
-        if (
-            equivBase &&
-            draft.amount &&
-            needEquivInput &&
-            draft.useCustomRate &&
-            amountCurrency &&
-            baseCurrency
-        ) {
-            const amt = Number(draft.amount);
-            const eqv = Number(equivBase);
-            const dateISO = draft.dateTime.toISOString();
-            const rBaseUAH = await converter.getRateUAH(baseCurrency, dateISO);
-            const customRate = amt !== 0 ? (eqv / amt) * rBaseUAH : undefined;
-            patchDraft({ rateCustom: customRate });
-        }
-    };
-
-    const onCustomRateToggle = (useCustomRate: boolean) => {
-        if (!useCustomRate) {
-            patchDraft({ useCustomRate: false, rateCustom: undefined });
-        } else {
-            patchDraft({ useCustomRate: true });
-        }
-    };
-
-    const typeItems = [
-        { label: "Витрата", value: TransactionType.Expense },
-        { label: "Дохід", value: TransactionType.Income },
-        { label: "Переказ", value: TransactionType.Transfer },
-    ];
-
-    const fmtDate = (d: Date) => d.toLocaleDateString("uk-UA");
-    const fmtTime = (d: Date) =>
-        d.toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" });
-
-    const onSave = async () => {
-        try {
-            const rate =
-                draft.rateCustom ??
-                (amountCurrency
-                    ? await converter.getRateUAH(amountCurrency, draft.dateTime.toISOString())
-                    : 1);
-
-            const trans = new Transaction({
-                id: details?.transaction.id,
-                type: draft.type,
-                amount: Number(draft.amount),
-                currencyCode: amountCurrency,
-                rate,
-                categoryId: draft.category?.id,
-                fromAccountId: draft.fromAccount?.id,
-                toAccountId: draft.toAccount?.id,
-                date: draft.dateTime.getFullYear() + "-" +
-                    String(draft.dateTime.getMonth() + 1).padStart(2, "0") + "-" +
-                    String(draft.dateTime.getDate()).padStart(2, "0"),
-                time: draft.dateTime.getHours().toString().padStart(2, "0") + ":" +
-                    draft.dateTime.getMinutes().toString().padStart(2, "0") + ":" +
-                    draft.dateTime.getSeconds().toString().padStart(2, "0"),
-                description: draft.description,
-            });
-
-            if (!trans.id)
-                await transService?.createTransaction(trans);
-            else
-                await transService?.updateTransaction(trans.id, trans);
-
-            nav.goBack();
-        } catch (err) {
-            console.error(err);
-        }
-    };
+    const { onSave } = useTransactionSaver({
+        draft,
+        details,
+        amountCurrency,
+        baseCurrency,
+        converter,
+    });
 
     return (
         <View style={{ flex: 1 }}>
@@ -314,7 +166,6 @@ export default function TransactionEditorScreen() {
                         />
                     </View>
 
-                    {/* Додатковий інпут: еквівалент (якщо валюти різні) */}
                     {needEquivInput && (
                         <>
                             <EditorLabel>≈ У {baseCurrency}</EditorLabel>
@@ -343,7 +194,6 @@ export default function TransactionEditorScreen() {
                         </>
                     )}
 
-                    {/* Transfer: "Сума, що надходить" */}
                     {showTo &&
                         draft.fromAccount?.currencyCode &&
                         draft.toAccount?.currencyCode &&
@@ -437,8 +287,4 @@ export default function TransactionEditorScreen() {
             />
         </View>
     );
-}
-
-export function getAccountInfo(account: Account): AccountInfo {
-    return { ...account } as AccountInfo;
 }

@@ -1,33 +1,20 @@
-import React, { useContext, useEffect, useState } from "react";
-import {
-    FlatList,
-    Modal,
-    useWindowDimensions,
-} from "react-native";
-import styled from "styled-components/native";
+import React, { useEffect, useMemo, useState } from "react";
+import { FlatList, Modal, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FactoryContext } from "../../app/contexts/FactoryContext";
+
 import { Category } from "../../domain/models/Category";
 import { CategoryType } from "../../domain/enums/CategoryType";
 import { dbToIconItem } from "../utils/iconDbMapper";
 import { IconRenderer } from "./IconRenderer";
+
 import {
-    Center,
-    CloseBtn,
-    CloseText, ConfirmBtn, ConfirmRow, ConfirmText, IconWrap, Loading,
-    Overlay, SelectedText,
-    Sheet,
-    Tile,
-    TileLabel
+    Center, CloseBtn, CloseText, ConfirmBtn, ConfirmRow, ConfirmText, IconWrap,
+    Loading, Overlay, SelectedText, Sheet, Tile, TileLabel
 } from "../../styles/components/TransactionPickerModalStyles";
 import {
-    BackBtn,
-    BackIcon, BreadcrumbRow,
-    Crumb,
-    CrumbArrow,
-    CrumbText,
-    HeaderRow
+    BackBtn, BackIcon, BreadcrumbRow, Crumb, CrumbArrow, CrumbText, HeaderRow
 } from "../../styles/components/CategoryPickerModalStyles";
+import { useChildCategories } from "../hooks/categories/useChildCategories";
 
 interface Props {
     type: CategoryType;
@@ -46,13 +33,11 @@ export default function CategoryPickerModal({
                                                 onSelect,
                                                 onClose,
                                             }: Props) {
-    const factory = useContext(FactoryContext);
-    const repo = factory?.getRepository(Category);
-
     const [path, setPath] = useState<Category[]>(baseCategory ? [baseCategory] : []);
-    const [data, setData] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(baseCategory ?? null);
+
+    const currentParentId = path.length ? path[path.length - 1].id : null;
+    const { data: categories, loading } = useChildCategories(type, currentParentId, visible);
 
     useEffect(() => {
         if (visible) {
@@ -61,58 +46,36 @@ export default function CategoryPickerModal({
         }
     }, [visible, baseCategory]);
 
-    useEffect(() => {
-        if (!visible) return;
-        let active = true;
-        (async () => {
-            setLoading(true);
-            const parent = path.length ? path[path.length - 1] : null;
-            const q = repo
-                ?.query()
-                .select()
-                .where("parentId", parent ? { operator: "=", value: parent.id } : { operator: "IS NULL" })
-                .where("type", { operator: "=", value: type });
-            const result = (await q?.executeAsync()) ?? [];
-            if (active) {
-                setData(result);
-                setLoading(false);
-            }
-        })();
-        return () => {
-            active = false;
-        };
-    }, [repo, path, type, visible]);
-
     const canGoBack = path.length > 0;
-    const handleBack = () => {
-        if (canGoBack) setPath((prev) => prev.slice(0, -1));
-    };
-    const goToLevel = (level: number) => setPath(path.slice(0, level + 1));
 
-    const handlePress = async (cat: Category) => {
-        setSelectedCategory(cat);
-        const children = await repo
-            ?.query()
-            .select()
-            .where("parentId", { operator: "=", value: cat.id })
-            .executeAsync();
-        if (children && children.length > 0) {
-            setPath([...path, cat]);
+    const handleBack = () => {
+        if (canGoBack) {
+            setPath(prev => prev.slice(0, -1));
         }
     };
 
-    const handleOk = () => {
-        if (!selectedCategory) return;
-        onSelect(selectedCategory);
-        onClose();
+    const goToLevel = (level: number) => {
+        setPath(path.slice(0, level + 1));
     };
 
-    const breadcrumb = path.map((c, i) => (
+    const handlePress = (cat: Category) => {
+        setSelectedCategory(cat);
+        setPath([...path, cat]);
+    };
+
+    const handleOk = () => {
+        if (selectedCategory) {
+            onSelect(selectedCategory);
+            onClose();
+        }
+    };
+
+    const breadcrumb = useMemo(() => path.map((c, i) => (
         <Crumb key={c.id} onPress={() => goToLevel(i)}>
             <CrumbText>{c.name}</CrumbText>
             {i < path.length - 1 && <CrumbArrow>›</CrumbArrow>}
         </Crumb>
-    ));
+    )), [path]);
 
     const { height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
@@ -126,7 +89,6 @@ export default function CategoryPickerModal({
         >
             <Overlay>
                 <Sheet style={{ maxHeight: height * 0.75, paddingBottom: insets.bottom + 8 }}>
-                    {/* Header: Назад, breadcrumb, Close */}
                     <HeaderRow>
                         {canGoBack && (
                             <BackBtn onPress={handleBack}>
@@ -138,9 +100,10 @@ export default function CategoryPickerModal({
                             <CloseText>✕</CloseText>
                         </CloseBtn>
                     </HeaderRow>
+
                     <ConfirmRow>
                         <SelectedText numberOfLines={1}>
-                            {selectedCategory ? selectedCategory.name : 'Виберіть категорію'}
+                            {selectedCategory ? selectedCategory.name : "Виберіть категорію"}
                         </SelectedText>
                         <ConfirmBtn
                             onPress={handleOk}
@@ -150,6 +113,7 @@ export default function CategoryPickerModal({
                             <ConfirmText>Ок</ConfirmText>
                         </ConfirmBtn>
                     </ConfirmRow>
+
                     {loading ? (
                         <Center>
                             <Loading size="large"/>
@@ -157,10 +121,10 @@ export default function CategoryPickerModal({
                     ) : (
                         <FlatList
                             key={"list"}
-                            data={data}
+                            data={categories}
                             numColumns={1}
                             contentContainerStyle={{ paddingBottom: 20, paddingTop: 4, gap: 12 }}
-                            keyExtractor={(item) => item.id!.toString()}
+                            keyExtractor={item => item.id!.toString()}
                             renderItem={({ item }) => (
                                 <Tile
                                     $selected={selectedCategory?.id === item.id}
