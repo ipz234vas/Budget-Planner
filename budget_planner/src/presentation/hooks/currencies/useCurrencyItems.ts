@@ -1,6 +1,6 @@
 import { Currency } from "../../../domain/models/Currency";
 import { useMemo } from "react";
-import { CurrencyItem } from "../../components/CurrencyDropdown";
+import { CurrencyItem } from "../../components/currency/CurrencyDropdown";
 
 export function useCurrencyItems(currencies: Currency[]): CurrencyItem[] {
     return useMemo(

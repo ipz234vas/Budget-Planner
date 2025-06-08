@@ -5,20 +5,20 @@ import { SQLiteService } from "../data/sqlite/SQLiteService";
 import { ThemeProvider } from "styled-components";
 import { darkTheme, lightTheme } from "./theme/theme";
 import { FactoryContext } from "./contexts/FactoryContext";
-import { ScreenContainer } from "../styles/components/Layout";
+import { ScreenContainer } from "../styles/components/universal/Layout";
 import RootNavigation, { BottomTabScreen } from "./navigation/RootNavigation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SettingsScreen from "../presentation/screens/SettingsScreen";
-import CategoriesScreenContainer from "../presentation/screens/CategoriesScreenContainer";
+import SettingsScreen from "../presentation/screens/settings/SettingsScreen";
+import CategoriesScreenContainer from "../presentation/screens/category/CategoriesScreenContainer";
 import { ThemeType } from "../shared/types/theme";
 import { ThemeContext } from "./contexts/ThemeContext";
 import { ChainCurrencyService } from "../data/services/currency/ChainCurrencyService";
 import { NbuCurrencyHandler } from "../data/services/currency/NbuCurrencyHandler";
 import { AddUahCurrencyHandler } from "../data/services/currency/AddUahCurrencyHandler";
 import { CurrencyProvider } from "./contexts/CurrencyContext";
-import AccountsStack from "./navigation/AccountsStack";
+import AccountsStack from "./navigation/account/AccountsStack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import TransactionsStack from "./navigation/TransactionsStack";
+import TransactionsStack from "./navigation/transaction/TransactionsStack";
 
 const screens: BottomTabScreen[] = [
     {

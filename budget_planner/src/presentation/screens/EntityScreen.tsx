@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { View, FlatList, SectionList, NativeSyntheticEvent, NativeScrollEvent, Text, StyleSheet } from "react-native";
-import { FAB, FABWrapper } from "../../styles/components/FAB";
+import { FAB, FABWrapper } from "../../styles/components/universal/FAB";
 import { ZoomIn, ZoomOut } from "react-native-reanimated";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
